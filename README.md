@@ -1,5 +1,5 @@
 - 👋 Hi, I’m Perazim
-- 👀 I’m interested in gaming, professional wrestling, web development, etc
+- 👀 I’m interested in gaming, anime, music, professional wrestling, web development, etc
 - 🌱 I’m currently learning html + css+javascript, php and python
 - 💞️ I’m looking to collaborate on ...
 - 📫 How to reach me ...
