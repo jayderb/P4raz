@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Car Part Retail System</title>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            background-image: url("DesiCorr-VpCI-NW-4.jpg");
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .header {
+            background-color: rgba(0, 0, 0, 0.7);
+            width: 100%;
+            padding: 16px 0;
+            text-align: center;
+            color: white;
+        }
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+        section {
+            padding: 20px;
+            margin: 20px auto; /* Center the section horizontally */
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 90%; /* Responsive width */
+            max-width: 900px; /* Maximum width */
+        }
+        h2 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        input, button {
+            margin: 5px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%; /* Full width for inputs and buttons */
+            box-sizing: border-box; /* Include padding in width calculation */
+        }
+        button {
+            background-color: black;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        .result {
+            margin-top: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .Home{
+            background-color: white;
+            color: black;
+            text-decoration: none;
+            top:10px;
+            left:10px;
+            position: absolute;
+            border-radius: 5px;
+            padding: 13px;
+        }
+        .Home:hover{
+            background-color: black;
+            color: white;
+            cursor: pointer;
+            transition-duration: 1s;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="Retail Sytsem-Home.html" class="Home"> Home</a>
+        <h1>National Car Part Retail System</h1>
+    </div>
+    <section id="local">
+        <h2>Local Garage Outlet</h2>
+        <div>
+            <h3>Sell Parts</h3>
+            <input type="text" id="partName" placeholder="Part Name">
+            <input type="number" id="quantity" placeholder="Quantity">
+            <button onclick="sellPart()">Sell Part</button>
+            <p id="sellResult" class="result"></p>
+        </div>
+        <div>
+            <h3>Order Parts</h3>
+            <input type="text" id="orderPartName" placeholder="Part Name">
+            <input type="number" id="orderQuantity" placeholder="Quantity">
+            <button onclick="orderPart()">Order Part</button>
+            <p id="orderResult" class="result"></p>
+        </div>
+        <div>
+            <h3>Customer Details</h3>
+            <input type="text" id="customerName" placeholder="Customer Name">
+            <input type="number" id="paymentAmount" placeholder="Payment Amount">
+            <button onclick="recordCustomer()">Record Customer</button>
+            <p id="customerResult" class="result"></p>
+        </div>
+    </section>
+
+    <script>
+        function sellPart() {
+            const partName = document.getElementById('partName').value;
+            const quantity = document.getElementById('quantity').value;
+            document.getElementById('sellResult').innerText = `Sold ${quantity} units of ${partName}`;
+        }
+
+        function orderPart() {
+            const partName = document.getElementById('orderPartName').value;
+            const quantity = document.getElementById('orderQuantity').value;
+            document.getElementById('orderResult').innerText = `Ordered ${quantity} units of ${partName}`;
+        }
+
+        function recordCustomer() {
+            const customerName = document.getElementById('customerName').value;
+            const paymentAmount = document.getElementById('paymentAmount').value;
+            document.getElementById('customerResult').innerText = `Recorded customer ${customerName} with payment of ${paymentAmount}`;
+        }
+    </script>
+</body>
+</html>
