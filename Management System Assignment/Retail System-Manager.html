@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retail System - Manager</title>
+    <style>
+        body {
+            background-color: lightgray;
+            background-image: url("DesiCorr-VpCI-NW-4.jpg");
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            background-size: cover;
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            background-color: rgba(0, 0, 0, 0.7);
+            width: 100%;
+            padding: 10px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-around; /* Space out items */
+            flex-wrap: wrap; /* Allow items to wrap on smaller screens */
+            gap: 10px; /* Reduce gap for smaller screens */
+        }
+        .Home, .Sign-Up, .Login, .Contact {
+            text-decoration: none;
+            color: yellow;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1rem; /* Responsive font size */
+        }
+        .Home:hover, .Sign-Up:hover, .Login:hover, .Contact:hover {
+            text-shadow: 0px 10px 10px yellow;
+            transition-duration: 0.2s;
+            cursor: pointer;
+             transform: scale(1.05);
+        }
+        h1 {
+            font-weight: bold;
+            color: yellow;
+            text-align: left;
+            margin-top: 10px;
+            font-size: 2rem; /* Responsive font size */
+        }
+
+        section {
+            text-align: center;
+            padding: 20px;
+            margin: 20px auto;
+            background-color: #fff;
+            width: 90%;
+            max-width: 900px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            background-color: black;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 5px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .result {
+            margin-top: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        input {
+            margin: 5px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+            max-width: 200px;
+            box-sizing: border-box;
+        }
+
+        /* Media Queries for Responsiveness */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 24px;
+            }
+
+            section {
+                padding: 15px;
+            }
+
+            button {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            input {
+                width: 100%;
+                max-width: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .Home {
+                padding: 8px;
+                font-size: 12px;
+            }
+
+            section {
+                padding: 10px;
+            }
+
+            button {
+                padding: 8px;
+            }
+
+            input {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i><span style="color: white;">Zed</span>Auto Spares</i></h1>
+        <a href="Retail Sytsem-Home.html" class="Home"><h2>Home</h2></a>
+        <a href="Retail Sytsem-Home.html" class="Sign-Up"><h2>Sign-Up</h2></a>
+        <a href="Retail System-Login.html" class="Login"><h2>Login</h2></a>
+        <a href="Retail Sytsem-Home.html" class="Contact"><h2>Contact</h2></a>
+    </div>
+    <section id="manager">
+        <h2>Manager</h2>
+
+        <!-- Local Garage Functionalities -->
+        <div>
+            <h3>Local Garage</h3>
+            <input type="text" id="partName" placeholder="Part Name">
+            <input type="number" id="quantity" placeholder="Quantity">
+            <button onclick="sellPart()">Sell Part</button>
+            <p id="sellResult" class="result"></p>
+
+            <input type="text" id="orderPartName" placeholder="Part Name">
+            <input type="number" id="orderQuantity" placeholder="Quantity">
+            <button onclick="orderPart()">Re-Order Part</button>
+            <p id="orderResult" class="result"></p>
+
+            <input type="text" id="customerName" placeholder="Customer Name">
+            <input type="number" id="paymentAmount" placeholder="Payment Amount">
+            <button onclick="recordCustomer()">Record Customer</button>
+            <p id="customerResult" class="result"></p>
+
+            <input type="text" id="emergencyPartName" placeholder="Part Name">
+            <button onclick="queryStock()">Check Stock</button>
+            <p id="emergencyResult" class="result"></p>
+        </div>
+
+        <!-- Warehouse Functionalities -->
+        <div>
+            <h3>Warehouse</h3>
+            <input type="text" id="productName" placeholder="Product Name">
+            <input type="number" id="productPrice" placeholder="Price">
+            <button onclick="setPrice()">Set Price</button>
+            <p id="priceResult" class="result"></p>
+
+            <input type="text" id="discountProductName" placeholder="Product Name">
+            <input type="number" id="discountPercentage" placeholder="Discount Percentage">
+            <button onclick="setDiscount()">Set Discount</button>
+            <p id="discountResult" class="result"></p>
+
+            <input type="text" id="dispatchPartName" placeholder="Part Name">
+            <input type="number" id="dispatchQuantity" placeholder="Quantity">
+            <button onclick="dispatchStock()">Dispatch Stock</button>
+            <p id="dispatchResult" class="result"></p>
+        </div>
+
+        <!-- Summary Views -->
+        <div>
+            <h3>Summaries</h3>
+            <button onclick="viewNationalSalesSummary()">View National Sales Summary</button>
+            <p id="nationalSalesSummary" class="result"></p>
+
+            <button onclick="viewLocalSalesSummary()">View Local Sales Summary</button>
+            <p id="localSalesSummary" class="result"></p>
+
+            <button onclick="viewNationalStockSummary()">View National Stock Summary</button>
+            <p id="nationalStockSummary" class="result"></p>
+
+            <button onclick="viewLocalStockSummary()">View Local Stock Summary</button>
+            <p id="localStockSummary" class="result"></p>
+        </div>
+    </section>
+
+    <script>
+        // Store stock levels
+        const stock = {
+            "Wheels": 56,
+            "Bumpers": 29,
+            "Steer Wheels": 25,
+            "Side Mirrors": 22,
+            "Pistons": 30,
+            "engine": 50,
+            "brake": 30,
+            "transmission": 40
+        };
+
+        const reorderThreshold = 10;
+
+        // Local Garage Functions
+        function sellPart() {
+            const partName = document.getElementById('partName').value;
+            const quantity = parseInt(document.getElementById('quantity').value);
+
+            if (stock[partName] >= quantity) {
+                stock[partName] -= quantity;
+                document.getElementById('sellResult').innerText = `Sold ${quantity} units of ${partName}. Remaining stock: ${stock[partName]}`;
+
+                if (stock[partName] < reorderThreshold) {
+                    orderPart(partName);
+                }
+            } else {
+                document.getElementById('sellResult').innerText = `Not enough stock of ${partName}. Only ${stock[partName]} units available.`;
+            }
+        }
+
+        function orderPart(partName) {
+            if (!partName) {
+                partName = document.getElementById('orderPartName').value;
+            }
+            const quantity = parseInt(document.getElementById('orderQuantity').value) || 20;
+            if (stock[partName]) {
+                stock[partName] += quantity;
+                document.getElementById('orderResult').innerText = `Re-ordered ${quantity} units of ${partName}. New stock: ${stock[partName]}`;
+            } else {
+                document.getElementById('orderResult').innerText = `Part ${partName} not found.`;
+            }
+        }
+
+        function recordCustomer() {
+            const customerName = document.getElementById('customerName').value;
+            const paymentAmount = document.getElementById('paymentAmount').value;
+            document.getElementById('customerResult').innerText = `Recorded customer ${customerName} with payment of $${paymentAmount}`;
+        }
+
+        function queryStock() {
+            const partName = document.getElementById('emergencyPartName').value;
+            if (stock[partName] !== undefined) {
+                document.getElementById('emergencyResult').innerText = `Current stock of ${partName}: ${stock[partName]} units`;
+            } else {
+                document.getElementById('emergencyResult').innerText = `Part ${partName} not found in stock.`;
+            }
+        }
+
+        // Warehouse Functions
+        const nationalPrices = {};
+        const nationalDiscounts = {};
+
+        function setPrice() {
+            const productName = document.getElementById('productName').value;
+            const productPrice = document.getElementById('productPrice').value;
+            nationalPrices[productName] = productPrice;
+            document.getElementById('priceResult').innerText = `Set price of ${productName} to $${productPrice}`;
+        }
+
+        function setDiscount() {
+            const productName = document.getElementById('discountProductName').value;
+            const discountPercentage = document.getElementById('discountPercentage').value;
+            nationalDiscounts[productName] = discountPercentage;
+            document.getElementById('discountResult').innerText = `Set discount for ${productName} to ${discountPercentage}%`;
+        }
+
+        function dispatchStock() {
+            const partName = document.getElementById('dispatchPartName').value;
+            const quantity = parseInt(document.getElementById('dispatchQuantity').value);
+
+            if (stock[partName]) {
+                stock[partName] += quantity;
+                document.getElementById('dispatchResult').innerText = `Dispatched ${quantity} units of ${partName}. New stock: ${stock[partName]}`;
+            } else {
+                document.getElementById('dispatchResult').innerText = `Part ${partName} not found.`;
+            }
+        }
+
+        // Summary Functions
+        function viewNationalSalesSummary() {
+            document.getElementById('nationalSalesSummary').innerText = "National Sales: $100,000";
+        }
+
+        function viewLocalSalesSummary() {
+            document.getElementById('localSalesSummary').innerText = "Local Sales: $50,000";
+        }
+
+        function viewNationalStockSummary() {
+            document.getElementById('nationalStockSummary').innerText = "National Stock: 10,000 units";
+        }
+
+        function viewLocalStockSummary() {
+            document.getElementById('localStockSummary').innerText = "Local Stock: 5,000 units";
+        }
+    </script>
+</body>
+</html>
