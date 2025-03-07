@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Car Part System - Home</title>
+    <title>Car Part Retail System - Home</title>
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="path/to/your/favicon.ico">
+    <link rel="icon" type="image/ico" href="favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
     <style>
         /* Base Styles */
         body {
@@ -17,63 +21,6 @@
             background-size: cover;
             background-attachment: fixed;
             font-family: 'Montserrat', sans-serif;
-        }
-        h1 {
-            font-weight: bold;
-            color: yellow;
-            text-align: left;
-            margin-top: 10px;
-            font-size: 2rem; /* Responsive font size */
-        }
-        p {
-            color: white;
-            text-align: center;
-            margin-top: 12px;
-            width: auto;
-            height: auto;
-            font-size: 1.2rem; /* Responsive font size */
-            font-weight: bold;
-        }
-        .paragraph-container {
-            margin-top: 15px;
-        }
-        .Local, .Warehouse, .Manager, .Customer {
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            border: 1px solid white;
-            border-radius: 5px;
-            padding: 15px;
-            margin-top: 20px;
-            font-family: 'Montserrat', sans-serif;
-            width: 100%; /* Full width on smaller screens */
-            max-width: 200px; /* Limit width on larger screens */
-            text-align: center;
-        }
-        .Local:hover, .Warehouse:hover, .Manager:hover, .Customer:hover {
-            background-color: white;
-            color: black;
-            border: 1px solid black;
-            transition-duration: 2s;
-            cursor: pointer;
-        }
-        .Container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .footer {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            text-align: center;
-            padding: 10px;
-            background-color: rgba(0, 0, 0, 0.7);
-            font-family: 'Montserrat', sans-serif;
-            font-weight: bold;
-            color: white;
         }
         .header {
             background-color: rgba(0, 0, 0, 0.7);
@@ -99,6 +46,66 @@
              transform: scale(1.05);
         }
 
+        h1 {
+            font-weight: bold;
+            color: yellow;
+            text-align: left;
+            margin-top: 10px;
+            font-size: 2rem; /* Responsive font size */
+        }
+        p {
+            color: white;
+            text-align: center;
+            margin-top: 12px;
+            width: auto;
+            height: auto;
+            font-size: 1.2rem; /* Responsive font size */
+            font-weight: bold;
+        }
+        .Container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .paragraph-container {
+            margin-top: 15px;
+        }
+        .Local, .Warehouse, .Manager, .Customer {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: yellow;
+            border: 1px solid yellow;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: large;
+            width: 100%; /* Full width on smaller screens */
+            max-width: 200px; /* Limit width on larger screens */
+            text-align: center;
+        }
+        .Local:hover, .Warehouse:hover, .Manager:hover, .Customer:hover {
+            background-color: yellow;
+            color: black;
+            border: 1px solid black;
+            transition-duration: 2s;
+            cursor: pointer;
+        }
+      
+        .footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            text-align: center;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            font-family: 'Montserrat', sans-serif;
+            font-weight: bold;
+            color: white;
+        }
+        
         /* Media Queries for Responsiveness */
         @media (max-width: 768px) {
             h1 {
@@ -142,9 +149,9 @@
     <div class="header">
         <h1><i><span style="color: white;">Zed</span>Auto Spares</i></h1>
         <a href="Retail Sytsem-Home.html" class="Home"><h2>Home</h2></a>
-        <a href="Retail Sytsem-Home.html" class="Sign-Up"><h2>Sign-Up</h2></a>
+        <a href="Retail System-Sign Up.html" class="Sign-Up"><h2>Sign-Up</h2></a>
         <a href="Retail System-Login.html" class="Login"><h2>Login</h2></a>
-        <a href="Retail Sytsem-Home.html" class="Contact"><h2>Contact</h2></a>
+        <a href="Retail System-Contact.html" class="Contact"><h2>Contact</h2></a>
     </div>
     <div class="paragraph-container">
         <b><p>Welcome to our <span style="color: yellow; font-weight: bold;">Car Parts Retail Management System!</span> We have provided you with the following buttons below to navigate through the different sections of our system.</p></b>

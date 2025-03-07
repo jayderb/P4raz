@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retail System - Sign Up</title>
+    <link rel="icon" type="image/ico" href="favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            background-image: url("DesiCorr-VpCI-NW-4.jpg");
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .Container {
+            text-align: center;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: seagreen;
+            border: 1px solid seagreen;
+            border-radius: 7px;
+            width: 90%;
+            max-width: 450px;
+            height: auto;
+            margin: 130px auto;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .email, .password {
+            border: 1px solid seagreen;
+            border-radius: 10px;
+            padding: 13px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            width: 100%;
+            max-width: 300px;
+            margin: 10px 0;
+            box-sizing: border-box;
+            font-size: larger;
+        }
+
+        .Sign-Up-btn {
+            border: 1px solid seagreen;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 150px;
+            padding: 12px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: seagreen;
+            margin-top: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .Sign-Up-btn:hover {
+            cursor: pointer;
+            transform: scale(1.05);
+            box-shadow: 0px 10px 10px seagreen;
+        }
+
+        .Sign-Up-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Media Queries for Responsiveness */
+        @media (max-width: 768px) {
+            .Container {
+                margin: 80px auto;
+                padding: 15px;
+            }
+
+            .email, .password {
+                max-width: 250px;
+            }
+
+            .Sign-Up-btn {
+                max-width: 130px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .Container {
+                margin: 50px auto;
+                padding: 10px;
+            }
+
+            .email, .password {
+                max-width: 200px;
+                padding: 10px;
+            }
+
+            .Sign-Up-btn {
+                max-width: 100px;
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="Container">
+        <form id="signupForm" action="" method="post">
+            <h1>Sign Up</h1>
+            <br>
+            <center><p style="color: seagreen; font-size: larger;">Create an account!</p></center>
+            <br>
+            <input type="email" class="email" id="email" placeholder="Enter your email" required>
+            <br>
+            <br>
+            <input type="password" class="password" id="password" placeholder="Enter your password" required>
+            <br>
+            <br>
+            <br>
+            <button type="submit" class="Sign-Up-btn" id="Sign-Up-btn" disabled>Submit</button>
+        </form>
+    </div>
+
+    <script>
+        // Get references to the form elements
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const submitButton = document.getElementById('Sign-Up-btn');
+
+        // Function to check if all fields are filled
+        function validateForm() {
+            if (emailInput.value.trim() !== '' && passwordInput.value.trim() !== '') {
+                submitButton.disabled = false; // Enable the button
+            } else {
+                submitButton.disabled = true; // Disable the button
+            }
+        }
+
+        // Add event listeners to the input fields
+        emailInput.addEventListener('input', validateForm);
+        passwordInput.addEventListener('input', validateForm);
+
+        // Add event listener to the form to prevent submission if fields are empty
+        document.getElementById('signupForm').addEventListener('submit', function (event) {
+            if (emailInput.value.trim() === '' || passwordInput.value.trim() === '') {
+                event.preventDefault(); // Prevent form submission
+                alert('Please fill in all fields.'); // Show an alert
+            }
+        });
+    </script>
+</body>
+</html>

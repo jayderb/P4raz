@@ -4,6 +4,12 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Retail System - Login</title>
+        <!-- Favicon -->
+    <link rel="icon" type="image/ico" href="favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
         <style>
             /* General Styles */
             body {
@@ -34,9 +40,9 @@
                 color: seagreen;
                 width: 90%;
                 max-width: 380px;
+                border: 1px solid seagreen;
                 border-radius: 9px;
                 box-sizing: border-box;
-                box-shadow: 0px 6px 6px green;
             }
 
             .email, .password {
@@ -45,7 +51,7 @@
                 padding: 15px;
                 border: 2px solid seagreen;
                 border-radius: 7px;
-                background-color: rgba(0, 0, 0, 0.8);
+                background-color: rgba(0, 0, 0, 0.7);
                 width: 100%;
                 box-sizing: border-box;
                 margin-bottom: 15px;
@@ -55,7 +61,7 @@
             .Login-btn {
                 text-align: center;
                 color: seagreen;
-                background-color: rgba(0, 0, 0, 0.8);
+                background-color: rgba(0, 0, 0, 0.7);
                 border: 2px solid seagreen;
                 padding: 15px;
                 border-radius: 7px;
@@ -82,7 +88,10 @@
             .link:hover {
                 text-decoration: underline;
             }
-
+            .Sign-Up{
+                text-decoration: none;
+                color: seagreen;
+            }
             .span {
                 cursor: pointer;
             }
@@ -90,7 +99,9 @@
             .span:hover {
                 text-decoration: underline;
             }
-
+            .radio{
+                color: seagreen;
+            }
             /* Responsive Styles */
             @media (max-width: 600px) {
                 .Container {
@@ -136,15 +147,18 @@
     </head>
     <body>
         <div class="Container">
-            <form id="loginForm" method="post">
+            <form id="loginForm" method="post" action=" ">
                 <h1>Login</h1>
-                <input class="email" id="email" type="email" placeholder="Enter Email" required>
-                <input class="password" id="password" type="password" placeholder="Enter Password" required>
-                <br>
-                <center><button class="Login-btn" id="loginBtn">Login</button></center>
+               <center><p style="color: seagreen;">Welcome Back!</p></center> 
+                <center><p style="color: seagreen;">Enter your email and password to log in.</p></center>
+                <input class="email" id="email" type="email" placeholder="Enter your email" required>
+                <br><br>
+                <input class="password" id="password" type="password" placeholder="Enter your password" required>
+                <br><br>
+                <center><button class="Login-btn" id="loginBtn" type="submit">Submit</button></center>
             </form>
             <a href="#" class="link"><p>Forgot Password?</p></a>
-            <center><a href="#" class="link"></a><p>Don't have an account? <span class="span"><a href=" ">Sign up!</a></span></p></a></center>
+            <center><a href="#" class="link"></a><p>Don't have an account? <span class="span"><a href="Retail System-Sign Up.html" class="Sign-Up">Sign up!</a></span></p></a></center>
         </div>
 
         <script>
