@@ -10,124 +10,20 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
-    <style>
-        body {
-            padding: 0;
-            margin: 0;
-            background-image: url("DesiCorr-VpCI-NW-4.jpg");
-            background-position: center;
-            background-repeat: no-repeat;
-            background-size: cover;
-            background-attachment: fixed;
-            font-family: 'Montserrat', sans-serif;
-        }
-        .header {
-            background-color: rgba(0, 0, 0, 0.7);
-            width: 100%;
-            position: sticky;
-            padding: 10px;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-around; /* Space out items */
-            flex-wrap: wrap; /* Allow items to wrap on smaller screens */
-            gap: 10px; /* Reduce gap for smaller screens */
-        }
-        h1 {
-            color: yellow;
-            margin: 0;
-            font-size: 2.5rem;
-        }
-        section {
-            padding: 20px;
-            margin: 70px auto;
-            background-color: white;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 90%;
-            max-width: 900px;
-        }
-        h2 {
-            color: yellow;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        input, button {
-            margin: 5px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        button {
-            background-color: black;
-            color: white;
-            cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        button:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-        }
-        .result {
-            margin-top: 10px;
-            font-weight: bold;
-            text-align: center;
-        }
-        .Home, .Sign-Up, .Login, .Contact {
-            text-decoration: none;
-            color:yellow;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 1rem; /* Responsive font size */
-        }
-        .Home:hover, .Sign-Up:hover, .Login:hover, .Contact:hover {
-            text-shadow: 0px 10px 10px yellow;
-            transition-duration: 0.2s;
-            cursor: pointer;
-             transform: scale(1.05);
-        }
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2rem; /* Smaller font size for smaller screens */
-            }
-            section {
-                margin: 40px auto; /* Reduce margin for smaller screens */
-                padding: 15px;
-            }
-            input, button {
-                padding: 8px; /* Smaller padding for inputs and buttons */
-            }
-        }
-
-        @media (max-width: 480px) {
-            h1 {
-                font-size: 1.5rem; /* Even smaller font size for mobile devices */
-            }
-            section {
-                margin: 20px auto; /* Further reduce margin for mobile devices */
-                padding: 10px;
-            }
-            input, button {
-                padding: 6px; /* Smaller padding for mobile devices */
-            }
-            .Home {
-                padding: 8px; /* Smaller padding for the Home button */
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="Local Garage.css">
 </head>
 <body>
     <div class="header">
         <h1><i><span style="color: white;">Zed</span>Auto Spares</i></h1>
         <a href="Retail Sytsem-Home.html" class="Home"><h2>Home</h2></a>
-        <a href="Retail Sytsem-Home.html" class="Sign-Up"><h2>Sign-Up</h2></a>
+        <a href="Retail System-Sign Up.html" class="Sign-Up"><h2>Sign-Up</h2></a>
         <a href="Retail System-Login.html" class="Login"><h2>Login</h2></a>
-        <a href="Retail Sytsem-Home.html" class="Contact"><h2>Contact</h2></a>
+        <a href="Retail System-Contact.html" class="Contact"><h2>Contact</h2></a>
+        <a href="Retail System-About.html" class="About"><h2>About</h2></a>
     </div>
     <section id="local">
-        <h2 style="color: black;">Local Garage Outlet</h2>
+        <h2>Local Garage Management</h2>
+        <br>
         <div>
             <h3>Emergency Stock Query</h3>
             <input type="text" id="emergencyPartName" placeholder="Enter Part Name">
@@ -152,7 +48,9 @@
             <h3>Customer Details</h3>
             <input type="text" id="customerName" placeholder="Customer Name">
             <input type="number" id="paymentAmount" placeholder="Payment Amount">
-            <button onclick="recordCustomer()">Record Customer</button>
+            <input type="text" id="orderedPart" placeholder="Ordered Part">
+            <input type="number" id="orderedQuantity" placeholder="Quantity Ordered">
+            <button onclick="recordCustomer()">Confirm Order</button>
             <p id="customerResult" class="result"></p>
         </div>
     </section>
@@ -161,24 +59,45 @@
         // Store stock levels in an object
         const stock = {
             "Spoiler": 23,
-            "Wheels": 56,
-            "Bumpers": 9,
-            "Steer Wheels": 25,
-            "Side Mirrors": 12,
+            "Wheel": 56,
+            "Back Bumper": 9,
+            "Steering Wheels": 25,
+            "Side Mirrors": 42,
             "Pistons": 30,
-            "engine": 50,
+            "Engine": 50,
             "brake pads": 30,
-            "transmission": 40
+            "Transmission": 40,
+            "Hood": 49,
+            "Body Shell": 35,
+            "Front Bumper": 67,
         };
         const reorderThreshold = 10;
+        const emergencyReorderThreshold = 5; // Threshold for emergency reorder
 
         // Function to handle emergency stock query
         function queryStock() {
             const partName = document.getElementById('emergencyPartName').value;
             if (stock[partName] !== undefined) {
-                document.getElementById('emergencyResult').innerText = `Current stock of ${partName}: ${stock[partName]} units`;
+                if (stock[partName] <= emergencyReorderThreshold) {
+                    document.getElementById('emergencyResult').innerText = `Emergency: Stock of ${partName} is critically low (${stock[partName]} units). Dispatching express overnight delivery.`;
+                    alert("Emergency: Stock of ${partName} is critically low (${stock[partName]} units). Dispatching express overnight delivery.");
+                    emergencyReorder(partName);
+                } else {
+                    document.getElementById('emergencyResult').innerText = `Current stock of ${partName}: ${stock[partName]} units`;
+                }
             } else {
                 document.getElementById('emergencyResult').innerText = `Part ${partName} not found in stock.`;
+            }
+        }
+
+        // Function to handle emergency reorder
+        function emergencyReorder(partName) {
+            const quantity = 20; // Default emergency reorder quantity
+            if (stock[partName]) {
+                stock[partName] += quantity;
+                document.getElementById('orderResult').innerText = `Emergency re-order dispatched for ${quantity} units of ${partName}. New stock: ${stock[partName]}`;
+            } else {
+                document.getElementById('orderResult').innerText = `Part ${partName} not found.`;
             }
         }
 
@@ -218,7 +137,9 @@
         function recordCustomer() {
             const customerName = document.getElementById('customerName').value;
             const paymentAmount = document.getElementById('paymentAmount').value;
-            document.getElementById('customerResult').innerText = `Recorded customer ${customerName} with payment of K${paymentAmount}`;
+            const orderedQuantity = document.getElementById('orderedQuantity').value;
+            const orderedPart = document.getElementById('orderedPart').value;
+            document.getElementById('customerResult').innerText = `Recorded customer ${customerName} with quantity order of ${orderedQuantity} units and payment of K${paymentAmount}`;
         }
     </script>
 </body>

@@ -10,138 +10,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
-        <style>
-            body {
-                background-color: gray;
-                background-image: url("DesiCorr-VpCI-NW-4.jpg");
-                background-repeat: no-repeat;
-                background-position: center;
-                background-size: cover;
-                background-attachment: fixed;
-                margin: 0;
-                padding: 0;
-                font-family: 'Montserrat', sans-serif;
-            }
-            .header {
-                background-color: rgba(0, 0, 0, 0.7);
-                color: yellow;
-                width: 100%;
-                padding: 10px;
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                justify-content: space-around; /* Space out items */
-                flex-wrap: wrap; /* Allow items to wrap on smaller screens */
-                gap: 10px; /* Reduce gap for smaller screens */
-            }
-            .Home, .Sign-Up, .Login, .Contact {
-                text-decoration: none;
-                color: yellow;
-                font-family: 'Montserrat', sans-serif;
-                font-size: 1rem; /* Responsive font size */
-            }
-            .Home:hover, .Sign-Up:hover, .Login:hover, .Contact:hover {
-                text-shadow: 0px 10px 10px yellow;
-                transition-duration: 0.2s;
-                cursor: pointer;
-                transform: scale(1.05);
-            }
-            h1 {
-                font-weight: bold;
-                color: yellow;
-                text-align: left;
-                margin-top: 10px;
-                font-size: 2rem; /* Responsive font size */
-            }
-            /* Wrapper to center the container */
-            .container-wrapper {
-                display: flex;
-                justify-content: center; /* Center horizontally */
-                align-items: center; /* Center vertically */
-                height: calc(100vh - 100px); /* Adjust height to account for header */
-            }
-            .Container {
-                border: 1px solid;
-                border-radius: 8px;
-                text-align: center;
-                color: black;
-                background-color: white;
-                width: 480px;
-                padding: 20px; /* Add some padding inside the container */
-            }
-            .Input-Name, .Input-Part, .Input-Quantity {
-                padding: 8px;
-                border: 1px solid;
-                border-radius: 12px;
-                width: 90%; /* Full width for responsiveness */
-                margin-bottom: 10px; /* Add spacing between inputs */
-            }
-            .Submit-Form {
-                background-color: black;
-                border: 1px solid;
-                border-radius: 6px;
-                padding: 8px;
-                color: white;
-                width: 100%; /* Full width for responsiveness */
-                margin-bottom: 10px; /* Add spacing between buttons */
-            }
-            .Submit-Form:hover {
-                box-shadow: 0px 7px 7px black;
-                cursor: pointer;
-                transition-duration: 0.2s;
-                transform: scale(1.05);
-            }
-
-            /* Responsive Design */
-            @media (max-width: 768px) {
-                .header {
-                    flex-direction: column; /* Stack header items vertically */
-                    padding: 20px 10px; /* Add more padding */
-                }
-                .header h1 {
-                    font-size: 1.8rem; /* Smaller font size for header */
-                    text-align: center; /* Center the header text */
-                }
-                .header a {
-                    font-size: 0.9rem; /* Smaller font size for links */
-                }
-                .Container {
-                    width: 90%; /* Adjust width for smaller screens */
-                    padding: 15px; /* Reduce padding */
-                }
-                h1 {
-                    font-size: 1.5rem; /* Smaller font size for headings */
-                }
-                .Input-Name, .Input-Part, .Input-Quantity {
-                    padding: 6px; /* Reduce padding for inputs */
-                }
-                .Submit-Form {
-                    padding: 6px; /* Reduce padding for buttons */
-                }
-            }
-
-            @media (max-width: 480px) {
-                .header h1 {
-                    font-size: 1.5rem; /* Even smaller font size for very small screens */
-                }
-                .header a {
-                    font-size: 0.8rem; /* Smaller font size for links */
-                }
-                .Container {
-                    width: 90%; /* Adjust width for very small screens */
-                    padding: 10px; /* Reduce padding further */
-                }
-                h1 {
-                    font-size: 1.2rem; /* Smaller font size for headings */
-                }
-                .Input-Name, .Input-Part, .Input-Quantity {
-                    padding: 4px; /* Reduce padding for inputs */
-                }
-                .Submit-Form {
-                    padding: 4px; /* Reduce padding for buttons */
-                }
-            }
-        </style>
+    <link rel="stylesheet" href="Customer.css">
         <title>Retail System-Customer</title>
     </head>
     <body>
@@ -149,21 +18,25 @@
         <div class="header">
             <h1><i><span style="color: white;">Zed</span>Auto Spares</i></h1>
             <a href="Retail Sytsem-Home.html" class="Home"><h2>Home</h2></a>
-            <a href="Retail Sytsem-Home.html" class="Sign-Up"><h2>Sign-Up</h2></a>
+            <a href="Retail System-Sign Up.html" class="Sign-Up"><h2>Sign-Up</h2></a>
             <a href="Retail System-Login.html" class="Login"><h2>Login</h2></a>
-            <a href="Retail Sytsem-Home.html" class="Contact"><h2>Contact</h2></a>
+            <a href="Retail System-Contact.html" class="Contact"><h2>Contact</h2></a>
+            <a href="Retail System-About.html" class="About"><h2>About</h2></a>
+            <a href="Retail System-Car Parts.html" class="Car-Parts"><h2>Available Parts</h2></a>
         </div>
-
+        <br><br><br><br>
         <!--Main Section-->
         <div class="container-wrapper">
             <div class="Container">
-                <h1 style="text-align: center; color: black;">Customer Order</h1>
+                <h1 style="text-align: center; color: yellow;">Customer Order</h1>
                 <h4>Customer Name:</h4>
                 <input type="text" placeholder="Enter Name" class="Input-Name" id="customerName">
-                <h4>Part:</h4>
+                <h4>Car Part:</h4>
                 <input type="text" placeholder="Enter Part" class="Input-Part" id="part">
-                <h4>Quantity:</h4>
+                <h4> Order Quantity:</h4>
                 <input type="number" placeholder="Enter Quantity" class="Input-Quantity" id="quantity">
+                <h4>Payment:</h4>
+                <input type="number" placeholder="Enter Payment Amount" class="Input-Payment" id="Payment">
                 <form method="post" id="customerForm">
                     <br>
                     <button type="submit" class="Submit-Form">Submit Form</button>
@@ -181,9 +54,9 @@
                 const customerName = document.getElementById("customerName").value.trim();
                 const part = document.getElementById("part").value.trim();
                 const quantity = document.getElementById("quantity").value.trim();
-
+                const Payment = document.getElementById("Payment").value.trim();
                 // Check if all fields are filled
-                if (customerName === "" || part === "" || quantity === "") {
+                if (customerName === "" || part === "" || quantity === "" || Payment==="") {
                     alert("Please fill in all fields before submitting.");
                 } else {
                     // If all fields are filled, submit the form
@@ -191,6 +64,7 @@
                     event.target.submit(); // Uncomment to actually submit the form
                 }
             });
+
         </script>
     </body>
 </html>

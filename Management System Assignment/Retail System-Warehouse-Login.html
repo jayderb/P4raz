@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Retail System - Login</title>
+        <!-- Favicon -->
+    <link rel="icon" type="image/ico" href="favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+        <style>
+            /* General Styles */
+            body {
+                padding: 0;
+                margin: 0;
+                font-family: 'Montserrat', sans-serif;
+                background-image: url("DesiCorr-VpCI-NW-4.jpg");
+                background-position: center;
+                background-repeat: no-repeat;
+                background-size: cover;
+                background-attachment: fixed;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+            }
+
+            h1 {
+                text-align: center;
+                font-weight: bold;
+                margin-bottom: 20px;
+                color: white;
+            }
+
+            .Container {
+                padding: 30px;
+                background-color: rgba(0, 0, 0, 0.8);
+                color: seagreen;
+                width: 90%;
+                max-width: 380px;
+                border: 1px solid seagreen;
+                border-radius: 9px;
+                box-sizing: border-box;
+            }
+
+            .email, .password {
+                text-align: center;
+                color: seagreen;
+                padding: 15px;
+                border: 2px solid seagreen;
+                border-radius: 7px;
+                background-color: rgba(0, 0, 0, 0.7);
+                width: 100%;
+                box-sizing: border-box;
+                margin-bottom: 15px;
+                font-size: 16px;
+            }
+
+            .Login-btn {
+                text-align: center;
+                color: white;
+                background-color: rgba(0, 0, 0, 0.7);
+                border: 2px solid seagreen;
+                padding: 15px;
+                border-radius: 7px;
+                width: 100%;
+                max-width: 170px;
+                font-size: 16px;
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+                cursor: pointer;
+            }
+
+            .Login-btn:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px seagreen;
+            }
+
+            .link {
+                text-decoration: none;
+                color:white;
+                text-align: center;
+                display: block;
+                margin-top: 10px;
+            }
+
+            .link:hover {
+                text-decoration: underline;
+            }
+            .Sign-Up{
+                text-decoration: none;
+                color:white;
+            }
+            .span {
+                cursor: pointer;
+                color: white;
+            }
+
+            .span:hover {
+                text-decoration: underline;
+            }
+            .radio{
+                color: seagreen;
+            }
+            /* Responsive Styles */
+            @media (max-width: 600px) {
+                .Container {
+                    padding: 20px;
+                }
+
+                h1 {
+                    font-size: 24px;
+                }
+
+                .email, .password {
+                    padding: 10px;
+                    font-size: 14px;
+                }
+
+                .Login-btn {
+                    padding: 10px;
+                    font-size: 14px;
+                }
+            }
+
+            @media (max-width: 400px) {
+                .Container {
+                    width: 100%;
+                    padding: 15px;
+                }
+
+                h1 {
+                    font-size: 20px;
+                }
+
+                .email, .password {
+                    padding: 8px;
+                    font-size: 12px;
+                }
+
+                .Login-btn {
+                    padding: 8px;
+                    font-size: 12px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="Container">
+            <form id="loginForm" method="post" action=" ">
+                <h1>Login</h1>
+               <center><p style="color: seagreen;">Welcome Back!</p></center> 
+                <center><p style="color: seagreen;">Enter your email and password to log in.</p></center>
+                <input class="email" id="email" type="email" placeholder="Enter your email" required>
+                <br><br>
+                <input class="password" id="password" type="password" placeholder="Enter your password" required>
+                <br><br>
+                <center><button class="Login-btn" id="loginBtn" type="submit">Submit</button></center>
+            </form>
+            <a href="#" class="link"><p>Forgot Password?</p></a>
+            <center><a href="#" class="link"></a><p>Don't have an account? <span class="span"><a href="Retail System-Sign Up.html" class="Sign-Up">Sign up!</a></span></p></a></center>
+        </div>
+
+        <script>
+            // Access the login button and form fields
+            const loginBtn = document.getElementById("loginBtn");
+            const emailField = document.getElementById("email");
+            const passwordField = document.getElementById("password");
+
+            // Add event listener to the login button
+            loginBtn.addEventListener("click", function() {
+                // Check if both email and password fields are filled
+                if (emailField.value !== "" && passwordField.value !== "") {
+                    // Redirect to the home page if both fields are filled
+                    window.location.href = "Retail System-Warehouse.html";
+                } else {
+                    // Alert the user to fill in the required fields
+                    alert("Please fill in both your email and password.");
+                }
+            });
+        </script>
+    </body>
+</html>
+
