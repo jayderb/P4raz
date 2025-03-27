@@ -1,40 +1,258 @@
-<!Doctype html>
- <html lang="en-us">
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-    <head>
-    <title> Retail System/About Us</title>
-            <!-- Favicon -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Part Retail System - About</title>
+    <!-- Favicon -->
     <link rel="icon" type="image/ico" href="favicon.ico">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
     <style>
-  .body{
-    margin: 0;
-    padding: 0;
-    background-image: url("DesiCorr-VpCI-NW-4.jpg");
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-attachment: fixed;
-  }
-  h1{
-    color: yellow;
-  }
+        body {
+            padding: 0;
+            margin: 0;
+            background-color: black;
+            text-align: center;
+            font-family: 'Montserrat', sans-serif;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            width: 100%;
+            padding: 10px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .Home, .Sign-Up, .Login, .Contact, .About {
+            text-decoration: none;
+            color: yellow;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1rem;
+            padding: 5px 10px;
+            transition: all 0.3s ease;
+        }
+
+        .Home:hover, .Sign-Up:hover, .Login:hover, .Contact:hover, .About:hover {
+            text-shadow: 0px 5px 5px yellow;
+            transform: scale(1.07);
+        }
+
+        .Home:active, .Sign-Up:active, .Login:active, .Contact:active, .About:active {
+            text-shadow: 0px 5px 5px yellow;
+        }
+
+        h1 {
+            font-weight: bold;
+            color: yellow;
+            text-align: left;
+            margin: 10px 0;
+            font-size: 2rem;
+            flex-grow: 1;
+            padding: 0 10px;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .title-container {
+            margin: 20px 0;
+        }
+
+        .title-container b {
+            font-size: 2rem;
+            text-shadow: -5px -10px 10px yellow;
+        }
+
+        .title-container p {
+            color: white;
+            text-shadow: 5px -10px 10px white;
+            margin: 0;
+        }
+
+        .paragraph-container {
+            text-align: center;
+            color: white;
+            font-size: 1rem;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            line-height: 1.6;
+            margin: 20px auto;
+            max-width: 800px;
+            padding: 0 15px;
+        }
+
+        .Container {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 30px auto;
+            max-width: 1200px;
+        }
+
+        .Local, .Warehouse, .Manager, .Customer {
+            border: 1px solid yellow;
+            border-radius: 7px;
+            padding: 12px;
+            flex: 1;
+            min-width: 200px;
+            max-width: 300px;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        .Local:hover, .Warehouse:hover, .Manager:hover, .Customer:hover {
+            box-shadow: 0 5px 15px yellow;
+            transform: scale(1.03);
+        }
+
+        .footer{
+            padding: 15px;
+            text-align: center;
+            width: 100%;
+            margin-top: auto;
+            text-align: center;
+        }
+
+        #copyright {
+            color: yellow;
+            margin: 0;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        /* Media Queries for Responsiveness */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                padding: 15px 0;
+            }
+            
+            h1 {
+                text-align: center;
+                margin-bottom: 15px;
+            }
+            
+            .Home, .Sign-Up, .Login, .Contact, .About {
+                margin: 5px 0;
+            }
+            
+            .title-container b {
+                font-size: 1.5rem;
+            }
+            
+            .Container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .Local, .Warehouse, .Manager, .Customer {
+                width: 80%;
+                max-width: none;
+                margin-bottom: 15px;
+            }
+            
+            .paragraph-container {
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .title-container b {
+                font-size: 1.2rem;
+            }
+            
+            .Local, .Warehouse, .Manager, .Customer {
+                width: 95%;
+                padding: 10px;
+            }
+            
+            .Container {
+                gap: 10px;
+            }
+            
+            #copyright {
+                font-size: 0.8rem;
+            }
+        }
     </style>
-    </head>
-    <body>
-  <div class="header">
-  <h2>Zed<span style="font-style: italic;color: white;">Auto Spares</span></h2>
-  </div>
-
-        <script>
-
-
-        </script>
-    </body>
- </html>
-
+</head>
+<body>
+    <div class="header">
+        <h1 style="text-shadow: 0 5px 5px yellow;"><i><span style="color: white;text-shadow: 0 5px 5px white;">Zed</span>Auto Spares</i></h1>
+        <a href="Retail Sytsem-Home.html" class="Home"><h2>Home</h2></a>
+        <a href="Retail System-Sign Up.html" class="Sign-Up"><h2>Sign-Up</h2></a>
+        <a href="Retail System-Login.html" class="Login"><h2>Login</h2></a>
+        <a href="Retail System-Contact.html" class="Contact"><h2>Contact</h2></a>
+        <a href="Retail System-About.html" class="About"><h2>About</h2></a>
+    </div>
     
+    <div class="main-content">
+        <div class="title-container">
+            <b><p>About <span style="color:white; font-weight: bold; font-style: italic;">Zed</span><span style="color: yellow;">Auto Spares</span></p></b>
+        </div>
+        
+        <div class="paragraph-container">
+            <p>Welcome to Zed Auto Spares, your trusted partner in car parts retail and management. Established in 2025, we have been dedicated to providing high-quality car parts and exceptional service to our customers nationwide.</p>
+            <p>Our mission is to ensure that every vehicle owner has access to the parts they need to keep their vehicles running smoothly. Whether you're a local garage, a warehouse, a manager, or a customer, our system is designed to meet your needs efficiently and effectively.</p>
+            <p>At Zed Auto Spares, we pride ourselves on our extensive inventory, competitive pricing, and a team of knowledgeable professionals ready to assist you. Our commitment to excellence has made us a leader in the automotive parts industry.</p>
+        </div>
+        
+        <h2 style="color: yellow;">Our Services</h2>
+        <div class="Container">
+            <div class="Local">
+                <strong style="color: yellow; font-weight: bold; font-size: larger;">Local Garage Stock Management:</strong><br><span style="color: white;font-size: larger;">Streamline your inventory and manage your stock with ease.</span>
+            </div>
+            <div class="Warehouse">
+                <strong style="color: yellow;font-weight: bold; font-size: larger;">Warehouse Stock Dispatch:</strong><br><span style="color: white;font-size: larger;">Efficiently dispatch parts from our state-of-the-art warehouses.</span>
+            </div>
+            <div class="Manager">
+                <strong style="color: yellow; font-weight: bold;font-size: larger;">Manager Dashboard:</strong><br><span style="color: white; font-size: larger;"> Comprehensive tools for managing your operations and analytics.</span>
+            </div>
+            <div class="Customer">
+                <strong style="color: yellow; font-weight: bold; font-size: larger;">Customer Order:</strong><br><span style="color: white; font-size: larger;"> Easy and convenient ordering process for all your car part needs.</span>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="footer">
+        <h3 id="copyright">Copyright &copy; 2025 Zed Auto Spares. All rights reserved.</h3>
+    </footer>
+    
+    <script>
+        // Function to update the copyright year
+        function updateCopyright() {
+            const copyrightElement = document.getElementById('copyright');
+            const currentYear = new Date().getFullYear();
+            const baseYear = 2025; // The initial year in the copyright notice
+
+            // Check if the current year is greater than the base year
+            if (currentYear > baseYear) {
+                copyrightElement.textContent = `Copyright &copy; ${baseYear}-${currentYear} Zed Auto Spares. All rights reserved`;
+            }
+        }
+
+        // Call the function to update the copyright year
+        updateCopyright();
+    </script>
+</body>
+</html>

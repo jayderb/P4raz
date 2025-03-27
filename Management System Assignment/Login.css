@@ -23,19 +23,19 @@
             .Container {
                 padding: 30px;
                 background-color: rgba(0, 0, 0, 0.8);
-                color: seagreen;
+                color:lightseagreen;
                 width: 90%;
                 max-width: 380px;
-                border: 1px solid seagreen;
+                border: 1px solid lightseagreen;
                 border-radius: 9px;
                 box-sizing: border-box;
             }
 
             .email, .password {
                 text-align: center;
-                color: seagreen;
+                color: lightseagreen;
                 padding: 15px;
-                border: 2px solid seagreen;
+                border: 1px solid lightseagreen;
                 border-radius: 7px;
                 background-color: rgba(0, 0, 0, 0.1);
                 width: 100%;
@@ -48,7 +48,7 @@
                 text-align: center;
                 color: white;
                 background-color: rgba(0, 0, 0, 0.1);
-                border: 2px solid seagreen;
+                border: 1px solid lightseagreen;
                 padding: 15px;
                 border-radius: 7px;
                 width: 100%;
@@ -60,7 +60,7 @@
 
             .Login-btn:hover {
                 transform: translateY(-5px);
-                box-shadow: 0 10px 20px seagreen;
+                box-shadow: 0 10px 20px lightseagreen;
             }
 
             .link {

@@ -118,6 +118,41 @@
         .contact-info a:hover {
             text-decoration: underline;
         }
+        .Whatsapp{
+            background-image: url('');
+        }
+        .Twitter{
+            background-image: url('');
+        }
+        .Facebook{
+            background-image: url('FB_IMG_17355853506980508.jpg');
+            background-position:center;
+            background-attachment:fixed;
+            background-repeat: no-repeat;
+            background-size: contain;
+        }
+        .Instagram{
+            background-image: url('FB_IMG_17355853624295814.jpg');
+            background-position:center;
+            background-attachment:fixed;
+            background-repeat: no-repeat;
+            background-size: contain;
+        }
+        .Whatsapp, .Twitter, .Facebook, .Instagram{
+            background-color: black;
+            margin-right: 10px;
+            border: 1px solid yellow;
+            border-radius: 50px;
+            padding: 20px;
+        }
+        .Whatsapp:hover, .Twitter:hover, .Facebook:hover, .Instagram:hover{
+            transform: scale(1.06);
+            cursor: pointer;
+        }
+        .Social-Media{
+            justify-content: space-around;
+            align-items: center;
+        }
         .map {
             margin-top: 20px;
             width: 100%;

@@ -37,21 +37,22 @@
             .Container {
                 padding: 30px;
                 background-color: rgba(0, 0, 0, 0.8);
-                color: seagreen;
+                color:lightseagreen;
                 width: 90%;
                 max-width: 380px;
-                border: 1px solid seagreen;
+                border: 1px solid lightseagreen;
                 border-radius: 9px;
                 box-sizing: border-box;
+                text-align: center;
             }
 
             .email, .password {
                 text-align: center;
-                color: seagreen;
+                color: lightseagreen;
                 padding: 15px;
-                border: 2px solid seagreen;
+                border: 1px solid lightseagreen;
                 border-radius: 7px;
-                background-color: rgba(0, 0, 0, 0.7);
+                background-color: rgba(0, 0, 0, 0.1);
                 width: 100%;
                 box-sizing: border-box;
                 margin-bottom: 15px;
@@ -61,8 +62,8 @@
             .Login-btn {
                 text-align: center;
                 color: white;
-                background-color: rgba(0, 0, 0, 0.7);
-                border: 2px solid seagreen;
+                background-color: rgba(0, 0, 0, 0.1);
+                border: 1px solid lightseagreen;
                 padding: 15px;
                 border-radius: 7px;
                 width: 100%;
@@ -74,7 +75,7 @@
 
             .Login-btn:hover {
                 transform: translateY(-5px);
-                box-shadow: 0 10px 20px seagreen;
+                box-shadow: 0 10px 20px lightseagreen;
             }
 
             .link {
@@ -144,14 +145,56 @@
                     font-size: 12px;
                 }
             }
+
+            /* Responsive Styles */
+            @media (max-width: 600px) {
+                .Container {
+                    padding: 20px;
+                }
+
+                h1 {
+                    font-size: 24px;
+                }
+
+                .email, .password {
+                    padding: 10px;
+                    font-size: 14px;
+                }
+
+                .Login-btn {
+                    padding: 10px;
+                    font-size: 14px;
+                }
+            }
+
+            @media (max-width: 400px) {
+                .Container {
+                    width: 100%;
+                    padding: 15px;
+                }
+
+                h1 {
+                    font-size: 20px;
+                }
+
+                .email, .password {
+                    padding: 8px;
+                    font-size: 12px;
+                }
+
+                .Login-btn {
+                    padding: 8px;
+                    font-size: 12px;
+                }
+            }
         </style>
     </head>
     <body>
         <div class="Container">
             <form id="loginForm" method="post" action=" ">
                 <h1>Login</h1>
-               <center><p style="color: seagreen;">Welcome Back!</p></center> 
-                <center><p style="color: seagreen;">Enter your email and password to log in.</p></center>
+                <p>Welcome Back!</p> 
+                <p>Enter your email and password to log in.</p>
                 <input class="email" id="email" type="email" placeholder="Enter your email" required>
                 <br><br>
                 <input class="password" id="password" type="password" placeholder="Enter your password" required>

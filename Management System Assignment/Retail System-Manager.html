@@ -14,7 +14,7 @@
 </head>
 <body>
     <div class="header">
-        <h1><i><span style="color: white;">Zed</span>Auto Spares</i></h1>
+        <h1 style="text-shadow: 0 10px 10px yellow;"><i><span style="color: white;text-shadow: 0 10px 10px white;">Zed</span>Auto Spares</i></h1>
         <a href="Retail Sytsem-Home.html" class="Home"><h2>Home</h2></a>
         <a href="Retail System-Sign Up.html" class="Sign-Up"><h2>Sign-Up</h2></a>
         <a href="Retail System-Login.html" class="Login"><h2>Login</h2></a>
@@ -22,7 +22,7 @@
         <a href="Retail System-About.html" class="About"><h2>About</h2></a>
     </div>
     <section id="manager">
-        <h1 style="text-align: center;">Manager Dashboard</h1>
+        <h1 style="text-align: center;text-decoration: underline;">Manager Dashboard</h1>
         <br>
         <!-- Local Garage Functionalities -->
         <div>
@@ -33,6 +33,7 @@
             <input type="number" id="quantity" placeholder="Quantity">
             <button onclick="sellPart()">Sell Part</button>
             <p id="sellResult" class="result"></p>
+            <br>
             <h2>Re-Order Part</h2>
             <input type="text" id="orderPartName" placeholder="Part Name">
             <input type="number" id="orderQuantity" placeholder="Quantity">
@@ -44,6 +45,7 @@
             <input type="number" id="paymentAmount" placeholder="Payment Amount">
             <button onclick="recordCustomer()">Record Customer</button>
             <p id="customerResult" class="result"></p>
+            <br>
              <h2>Check Stock</h2>
             <input type="text" id="emergencyPartName" placeholder="Part Name">
             <button onclick="queryStock()">Check Stock</button>
