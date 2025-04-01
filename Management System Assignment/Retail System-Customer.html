@@ -16,10 +16,10 @@
     <body>
         <!--Header Section--> 
         <div class="header">
-            <h1 style="text-shadow:0 12px 10px yellow;"><i><span style="color: white;text-shadow: 0 12px 10px white;">Zed</span>Auto Spares</i></h1>
+            <h1 style="text-shadow:0 5px 5px yellow;"><i><span style="color: white;text-shadow: 0 5px 5px white;">Zed</span>Auto Spares</i></h1>
             <a href="Retail Sytsem-Home.html" class="Home"><h2>Home</h2></a>
             <a href="Retail System-Sign Up.html" class="Sign-Up"><h2>Sign-Up</h2></a>
-            <a href="Retail System-Login.html" class="Login"><h2>Login</h2></a>
+            <a href="Retail System-Login.html" class="Login"><h2>Log in</h2></a>
             <a href="Retail System-Contact.html" class="Contact"><h2>Contact</h2></a>
             <a href="Retail System-About.html" class="About"><h2>About</h2></a>
             <a href="Retail System-Car Parts.html" class="Car-Parts"><h2>Available Parts</h2></a>
@@ -28,18 +28,18 @@
         <!--Main Section-->
         <div class="container-wrapper">
             <div class="Container">
+                <form method="post" action=" " id="customerForm">
                 <h1 style="text-align: center; color: yellow;">Customer Order</h1>
-                <h4>Customer Name:</h4>
-                <input type="text" placeholder="Enter Name" class="Input-Name" id="customerName">
-                <h4>Car Part:</h4>
-                <input type="text" placeholder="Enter Part" class="Input-Part" id="part">
-                <h4> Order Quantity:</h4>
-                <input type="number" placeholder="Enter Quantity" class="Input-Quantity" id="quantity">
-                <h4>Payment:</h4>
-                <input type="number" placeholder="Enter Payment Amount" class="Input-Payment" id="Payment">
-                <form method="post" id="customerForm">
-                    <br>
-                    <button type="submit" class="Submit-Form">Submit Form</button>
+                <label><h4>Customer Name:</h4></label>
+                <input type="text" name="customerName" placeholder="Enter Name" class="Input-Name" id="customerName">
+                <label><h4>Car Part:</h4></label>
+                <input type="text" name="carPart" placeholder="Enter Part" class="Input-Part" id="part">
+                <label><h4> Order Quantity:</h4></label>
+                <input type="number" name="orderQuantity" placeholder="Enter Quantity" class="Input-Quantity" id="quantity">
+                <label><h4>Payment:</h4></label>
+                <input type="number" name="paymentAmount" placeholder="Enter Payment Amount" class="Input-Payment" id="Payment">
+                <br><br>
+                <button type="submit" class="Submit-Form">Submit Order</button>
                 </form>
             </div>
         </div>
@@ -61,6 +61,7 @@
                 } else {
                     // If all fields are filled, submit the form
                     alert("Form submitted successfully!");
+                    console.log("customerName");
                     event.target.submit(); // Uncomment to actually submit the form
                 }
             });

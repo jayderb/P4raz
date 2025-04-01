@@ -20,7 +20,7 @@
             max-width: 450px;
             height: auto;
             margin: 80px auto;
-            padding: 20px;
+            padding: 40px;
             box-sizing: border-box;
         }
 
@@ -80,7 +80,7 @@
 
         @media (max-width: 480px) {
             .Container {
-                margin: 50px auto;
+                margin: 187px auto;
                 padding: 10px;
             }
 

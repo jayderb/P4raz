@@ -5,13 +5,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Retail System - Login</title>
         <!-- Favicon -->
-    <link rel="icon" type="image/ico" href="favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
+        <link rel="icon" type="image/ico" href="favicon.ico">
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+        <link rel="manifest" href="/site.webmanifest">
         <style>
-            /* General Styles */
+            /* [All your existing CSS styles remain exactly the same] */
             body {
                 padding: 0;
                 margin: 0;
@@ -145,52 +145,11 @@
                 }
             }
 
-            /* Responsive Styles */
-            @media (max-width: 600px) {
-                .Container {
-                    padding: 20px;
-                }
-
-                h1 {
-                    font-size: 24px;
-                }
-
-                .email, .password {
-                    padding: 10px;
-                    font-size: 14px;
-                }
-
-                .Login-btn {
-                    padding: 10px;
-                    font-size: 14px;
-                }
-            }
-
-            @media (max-width: 400px) {
-                .Container {
-                    width: 100%;
-                    padding: 15px;
-                }
-
-                h1 {
-                    font-size: 20px;
-                }
-
-                .email, .password {
-                    padding: 8px;
-                    font-size: 12px;
-                }
-
-                .Login-btn {
-                    padding: 8px;
-                    font-size: 12px;
-                }
-            }
         </style>
     </head>
     <body>
         <div class="Container">
-            <form id="loginForm" method="post" action=" ">
+            <form id="loginForm">
                 <h1>Login</h1>
                <center><p>Welcome Back!</p></center> 
                 <center><p>Enter your email and password to log in.</p></center>
@@ -205,23 +164,33 @@
         </div>
 
         <script>
-            // Access the login button and form fields
-            const loginBtn = document.getElementById("loginBtn");
-            const emailField = document.getElementById("email");
-            const passwordField = document.getElementById("password");
+            document.getElementById("loginForm").addEventListener("submit", function(event) {
+                // Prevent the default form submission
+                event.preventDefault();
+                
+                // Get form fields
+                const emailField = document.getElementById("email");
+                const passwordField = document.getElementById("password");
 
-            // Add event listener to the login button
-            loginBtn.addEventListener("click", function() {
-                // Check if both email and password fields are filled
-                if (emailField.value !== "" && passwordField.value !== "") {
-                    // Redirect to the home page if both fields are filled
-                    window.location.href = "Retail System-Manager.html";
+                // Trim whitespace from inputs
+                const email = emailField.value.trim();
+                const password = passwordField.value.trim();
+
+                // Check if both fields are filled
+                if (email !== "" && password !== "") {
+                    // Here you would typically validate credentials with a server
+                    // For this example, we'll just redirect after showing a message
+                    alert("Login successful! Redirecting to Manager Portal...");
+                    
+                    // Redirect to Manager page after a brief delay
+                    setTimeout(function() {
+                        window.location.href = "Retail System-Manager.html";
+                    }, 500);
                 } else {
-                    // Alert the user to fill in the required fields
+                    // Show error message if fields are empty
                     alert("Please fill in both your email and password.");
                 }
             });
         </script>
     </body>
 </html>
-

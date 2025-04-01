@@ -30,7 +30,7 @@ body {
             }
 
             .Home:hover, .Sign-Up:hover, .Login:hover, .Contact:hover, .About:hover{
-                text-shadow: 0px 10px 10px yellow;
+                text-shadow: 0px 5px 5px yellow;
                 transition-duration: 0.2s;
                 cursor: pointer;
                 transform: scale(1.07);

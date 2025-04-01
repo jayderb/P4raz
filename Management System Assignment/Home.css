@@ -29,13 +29,13 @@ body {
 }
 
 .Home:hover, .Sign-Up:hover, .Login:hover, .Contact:hover, .About:hover {
-    text-shadow: 0px 10px 10px yellow;
+    text-shadow: 0px 5px 5px yellow;
     transition-duration: 0.2s;
     cursor: pointer;
     transform: scale(1.07);
 }
 .Home::after, .Sign-Up::after, .Login::after, .Contact::after, .About::after{
-    text-shadow: 0px 10px 10px yellow;
+    text-shadow: 0px 5px 5px yellow;
 }
 h1 {
     font-weight: bold;
@@ -138,7 +138,7 @@ p {
 .Local:hover, .Warehouse:hover, .Manager:hover, .Customer:hover {
     background-color: yellow;
     color: black;
-    transform: scale(1.09);
+    transform: scale(1.13);
     border: 1px solid black;
     transition-duration: 1.2s;
     cursor: pointer;

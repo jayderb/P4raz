@@ -5,14 +5,16 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Retail System - Login</title>
         <!-- Favicon -->
-    <link rel="icon" type="image/ico" href="favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
+        <link rel="icon" type="image/ico" href="favicon.ico">
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+        <link rel="manifest" href="/site.webmanifest">
         <style>
-            /* General Styles */
-            body {
+            /* [Your existing CSS styles remain exactly the same] */
+            
+    /* General Styles */
+    body {
                 padding: 0;
                 margin: 0;
                 font-family: 'Montserrat', sans-serif;
@@ -190,7 +192,7 @@
     </head>
     <body>
         <div class="Container">
-            <form id="loginForm" method="post" action=" ">
+            <form id="loginForm">
                 <h1>Login</h1>
                <center><p>Welcome Back!</p></center> 
                 <center><p>Enter your email and password to log in.</p></center>
@@ -205,19 +207,30 @@
         </div>
 
         <script>
-            // Access the login button and form fields
-            const loginBtn = document.getElementById("loginBtn");
-            const emailField = document.getElementById("email");
-            const passwordField = document.getElementById("password");
+            document.getElementById("loginForm").addEventListener("submit", function(event) {
+                // Prevent the default form submission
+                event.preventDefault();
+                
+                // Get form fields
+                const emailField = document.getElementById("email");
+                const passwordField = document.getElementById("password");
 
-            // Add event listener to the login button
-            loginBtn.addEventListener("click", function() {
-                // Check if both email and password fields are filled
-                if (emailField.value !== "" && passwordField.value !== "") {
-                    // Redirect to the local garage if both fields are filled
-                    window.location.href = "Retail System-Local Garage.html";
+                // Trim whitespace from inputs
+                const email = emailField.value.trim();
+                const password = passwordField.value.trim();
+
+                // Check if both fields are filled
+                if (email !== "" && password !== "") {
+                    // Here you would typically validate credentials with a server
+                    // For this example, we'll just redirect after showing a message
+                    alert("Login successful! Redirecting to Local Garage...");
+                    
+                    // Redirect to Local Garage page after a brief delay
+                    setTimeout(function() {
+                        window.location.href = "Retail System-Local Garage.html";
+                    }, 500);
                 } else {
-                    // Alert the user to fill in the required fields
+                    // Show error message if fields are empty
                     alert("Please fill in both your email and password.");
                 }
             });

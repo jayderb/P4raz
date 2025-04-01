@@ -16,16 +16,16 @@
         <form id="signupForm" action="" method="post">
             <h1 style="color: white;">Sign Up</h1>
             <br>
-            <center><p style="font-size: larger;font-weight: bold;">Create an account!</p></center>
+            <center><p style="font-size: larger;font-weight: bold;font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;">Create an account!</p></center>
             <br>
-            <input type="email" class="email" id="email" placeholder="Enter your email" required>
-            <br>
-            <br>
-            <input type="password" class="password" id="password" placeholder="Enter your password" required>
+            <input type="email" name="Email" class="email" id="email" placeholder="Enter your email" required>
             <br>
             <br>
+            <input type="password" name="Password" class="password" id="password" placeholder="Enter your password" required>
             <br>
-            <button type="submit" class="Sign-Up-btn" id="Sign-Up-btn" disabled>Submit</button>
+            <br>
+            <br>
+            <button type="submit" class="Sign-Up-btn" id="Sign-Up-btn">Submit</button>
         </form>
     </div>
 
@@ -34,9 +34,10 @@
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
         const submitButton = document.getElementById('Sign-Up-btn');
+        const signupForm = document.getElementById('signupForm');
 
-        // Function to check if all fields are filled
-        function validateForm() {
+        // Function to check if all fields are filled and enable/disable button
+        function checkForm() {
             if (emailInput.value.trim() !== '' && passwordInput.value.trim() !== '') {
                 submitButton.disabled = false; // Enable the button
             } else {
@@ -45,15 +46,24 @@
         }
 
         // Add event listeners to the input fields
-        emailInput.addEventListener('input', validateForm);
-        passwordInput.addEventListener('input', validateForm);
+        emailInput.addEventListener('input', checkForm);
+        passwordInput.addEventListener('input', checkForm);
 
-        // Add event listener to the form to prevent submission if fields are empty
-        document.getElementById('signupForm').addEventListener('submit', function (event) {
-            if (emailInput.value.trim() === '' || passwordInput.value.trim() === '') {
-                event.preventDefault(); // Prevent form submission
-                alert('Please fill in all fields.'); // Show an alert
-            }
+        // Initialize button state
+        checkForm();
+
+        // Handle form submission
+        signupForm.addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent default form submission
+            
+            // Here you would typically send the data to a server
+            // For this example, we'll just show the alert and redirect
+            alert("You have successfully signed up. You will now be redirected to the home page");
+            
+            // Redirect to home page after 1 second to allow user to see the alert
+            setTimeout(function() {
+                window.location.href = "Retail Sytsem-Home.html";
+            }, 1000);
         });
     </script>
 </body>
