@@ -33,11 +33,11 @@
 
             .email, .password {
                 text-align: center;
-                color: lightseagreen;
+                color: black;
                 padding: 15px;
                 border: 1px solid lightseagreen;
                 border-radius: 7px;
-                background-color: rgba(0, 0, 0, 0.1);
+                background-color: white(0, 0, 0, 0.1);
                 width: 100%;
                 box-sizing: border-box;
                 margin-bottom: 15px;

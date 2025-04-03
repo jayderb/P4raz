@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Retail System - Zed Auto Spares</title>
+        <!-- Favicon -->
+        <link rel="icon" type="image/ico" href="favicon.ico">
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+        <link rel="manifest" href="/site.webmanifest">
+        <!-- Google Fonts -->
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+        <style>   
+            body {
+                padding: 0;
+                margin: 0;
+                background-color: white;
+                font-family: 'Montserrat', sans-serif;
+                text-align: center;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+            .header {
+                background-color: rgba(0, 0, 0, 0.9);
+                font-style: italic;
+                padding: 14px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            }
+            .welcome-container {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                padding: 40px 20px;
+                max-width: 800px;
+                margin: 0 auto;
+            }
+            .welcome-title {
+                font-size: 2.5rem;
+                font-weight: 700;
+                margin-bottom: 20px;
+                color: #333;
+            }
+            .welcome-message {
+                font-size: 1.1rem;
+                line-height: 1.6;
+                color: #555;
+                margin-bottom: 40px;
+            }
+            .get-started-btn {
+                background-color: #FFD700; /* Yellow color to match logo */
+                color: #000;
+                border: none;
+                padding: 15px 40px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                border-radius: 30px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                animation: pulse 3s infinite;
+            }
+            .get-started-btn:hover {
+                background-color: black;
+                color: whitesmoke;
+                transition: 0.9s;
+                transform: translateY(-2px);
+                box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            }
+            @keyframes pulse {
+                0% {
+                    transform: scale(1);
+                }
+                50% {
+                    transform: scale(1.09);
+                }
+                100% {
+                    transform: scale(1);
+                }
+            }
+            .footer {
+                background-color: rgba(0, 0, 0, 0.9);
+                color: white;
+                padding: 15px;
+                font-size: 0.9rem;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1><span style="color:white;">Zed</span><span style="color:yellow;">Auto Spares</span></h1>
+        </div>
+
+        <div class="welcome-container">
+            <h2 class="welcome-title">Welcome to<span style="font-style: italic;"> Zed<span style="color:yellow;">Auto Spares</span></span></h2>
+            <p class="welcome-message">
+                Your one-stop shop for all your automotive needs! At Zed Auto Spares, we provide high-quality 
+                car parts and accessories for all makes and models. With over 15 years of experience in the 
+                industry, our knowledgeable staff can help you find exactly what you need to keep your vehicle 
+                running smoothly. We pride ourselves on competitive prices, exceptional customer service, 
+                and a vast inventory of genuine and aftermarket parts.
+            </p>
+            <button class="get-started-btn">Get Started</button>
+        </div>
+
+        <div class="footer">
+            <p id="copyright">© 2025 Zed Auto Spares. All rights reserved.</p>
+        </div>
+
+        <script>
+            document.querySelector('.get-started-btn').addEventListener('click', function() {
+                
+                window.location.href = 'Retail Sytsem-Home.html';
+            });
+            function updateCopyright(){
+                const copyrightUpdate = document.getElementById("copyright");
+                const currentYear = new Date().getFullYear();
+                const baseYear = 2025;
+                if(currentYear>baseYear){
+                    copyright.textContent = "© ${currentYear} Zed Auto Spares. All rights reserved."
+                }
+            }
+            updateCopyright();
+        </script>
+    </body>
+</html>
