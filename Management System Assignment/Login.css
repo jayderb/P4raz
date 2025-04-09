@@ -32,7 +32,6 @@
             }
 
             .email, .password {
-                text-align: center;
                 color: black;
                 padding: 15px;
                 border: 1px solid lightseagreen;

@@ -44,7 +44,9 @@ h1 {
     margin-top: 10px;
     font-size: 2rem;
 }
-
+h1:hover{
+    text-decoration: underline;
+}
 p {
     color: white;
     text-align: center;
@@ -149,9 +151,9 @@ p {
     left: 0;
     right: 0;
     text-align: center;
-    padding: 10px;
+    padding: 8.2px;
     background-color: rgba(0, 0, 0, 0.7);
-    font-family: 'Montserrat', sans-serif;
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
     font-weight: bold;
     color: white;
 }

@@ -11,8 +11,6 @@
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
         <link rel="manifest" href="/site.webmanifest">
         <style>
-            /* [Your existing CSS styles remain exactly the same] */
-            
     /* General Styles */
     body {
                 padding: 0;
@@ -34,6 +32,7 @@
                 font-weight: bold;
                 margin-bottom: 20px;
                 color: white;
+                font-family: 'Times New Roman', Times, serif;
             }
 
             .Container {
@@ -193,12 +192,12 @@
     <body>
         <div class="Container">
             <form id="loginForm">
-                <h1>Login</h1>
+                <h1>Local Garage Login</h1>
                <center><p>Welcome Back!</p></center> 
                 <center><p>Enter your email and password to log in.</p></center>
-                <input class="email" id="email" type="email" placeholder="Enter your email" required>
+                <input class="email" id="email" type="email" name="Email Address" placeholder="Enter your email" required>
                 <br><br>
-                <input class="password" id="password" type="password" placeholder="Enter your password" required>
+                <input class="password" id="password" type="password" name="Password" placeholder="Enter your password" required>
                 <br><br>
                 <center><button class="Login-btn" id="loginBtn" type="submit">Submit</button></center>
             </form>

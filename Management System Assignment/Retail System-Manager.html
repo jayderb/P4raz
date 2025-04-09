@@ -14,7 +14,7 @@
 </head>
 <body>
     <div class="header">
-        <h1 style="text-shadow: 0 5px 5px yellow;"><i><span style="color: white;text-shadow: 0 5px 5px white;">Zed</span>Auto Spares</i></h1>
+        <a href="Retail System.Html" style="text-decoration: none;"><h1 style="text-shadow: 0 5px 5px yellow;"><i><span style="color: white; text-shadow:0 5px 5px white;">Zed</span>Auto Spares</i></h1></a>
         <a href="Retail Sytsem-Home.html" class="Home"><h2>Home</h2></a>
         <a href="Retail System-Sign Up.html" class="Sign-Up"><h2>Sign-Up</h2></a>
         <a href="Retail System-Login.html" class="Login"><h2>Log in</h2></a>
@@ -52,7 +52,7 @@
             <button onclick="queryStock()">Check Stock</button>
             <p id="emergencyResult" class="result"></p>
         </div>
-
+        <br>
         <!-- Warehouse Functionalities -->
         <div>
             <h1 style="text-align: center;">Warehouse</h1>
@@ -75,7 +75,7 @@
             <button onclick="dispatchStock()">Dispatch Stock</button>
             <p id="dispatchResult" class="result"></p>
         </div>
-
+            <br>
         <!-- Summary Views -->
         <h3>Summaries</h3>
         <div class="Summaries">    
@@ -185,7 +185,7 @@
 
         // Summary Functions
         function viewNationalSalesSummary() {
-            document.getElementById('nationalSalesSummary').innerText = "National Sales: K100,000";
+            document.getElementById('nationalSalesSummary').innerText = "National Sales: K500,000";
         }
 
         function viewLocalSalesSummary() {
@@ -193,7 +193,7 @@
         }
 
         function viewNationalStockSummary() {
-            document.getElementById('nationalStockSummary').innerText = "National Stock: 10,000 units";
+            document.getElementById('nationalStockSummary').innerText = "National Stock: 15,000 units";
         }
 
         function viewLocalStockSummary() {
