@@ -27,21 +27,21 @@
         <br>
         <div>
             <h3>Emergency Stock Query</h3>
-            <input type="text" id="emergencyPartName" placeholder="Enter Part Name">
+            <input type="text" id="emergencyPartName" placeholder="Enter Part Name" name="Stock">
             <button onclick="queryStock()">Check Stock</button>
             <p id="emergencyResult" class="result"></p>
         </div>
         <div>
             <h3>Sell Parts</h3>
-            <input type="text" id="partName" placeholder="Part Name">
-            <input type="number" id="quantity" placeholder="Quantity">
+            <input type="text" id="partName" placeholder="Part Name" name="part">
+            <input type="number" id="quantity" placeholder="Quantity" name="quantity">
             <button onclick="sellPart()">Sell Part</button>
             <p id="sellResult" class="result"></p>
         </div>
         <div>
             <h3>Re-Order Parts</h3>
-            <input type="text" id="orderPartName" placeholder="Part Name">
-            <input type="number" id="orderQuantity" placeholder="Quantity">
+            <input type="text" id="orderPartName" placeholder="Part Name" name="re-order">
+            <input type="number" id="orderQuantity" placeholder="Quantity" name="re-order quantity">
             <button onclick="orderPart()">Re-Order Part</button>
             <p id="orderResult" class="result"></p>
         </div>

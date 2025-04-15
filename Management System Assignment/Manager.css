@@ -44,7 +44,9 @@ body {
             margin-top: 10px;
             font-size: 2rem; /* Responsive font size */
         }
-
+        h1:hover{
+            text-decoration: underline;
+        }
         section {
             text-align: center;
             padding: 20px;

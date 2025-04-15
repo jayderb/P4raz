@@ -82,6 +82,9 @@ body {
             cursor: pointer;
              transform: scale(1.07);
         }
+        h1:hover{
+             text-decoration: underline;
+        }
         /* Responsive Design */
         @media (max-width: 768px) {
             h1 {
