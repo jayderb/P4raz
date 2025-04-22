@@ -39,12 +39,15 @@ h1:hover{
 
 .header a h2 {
     margin: 0;
-    font-size: 1.2rem;
+    font-size: 1.5rem;
 }
 .header a h2:hover{
     color: yellow;
     transform: scale(1.08);
     transition: 0.5s;
+}
+.header a :visited{
+    color: yellow;
 }
 /* Content Layout */
 .paragraph-container {
@@ -93,14 +96,15 @@ h1:hover{
     margin-top: 10px;
 }
 .Local:hover, .Warehouse:hover, .Manager:hover, .Customer:hover{
-    transform: scale(1.13);
-    transition-duration: 1.4s;
+    transform: scale(1.10);
+    transition-duration: 1.2s;
     }
-    h4{
+ h4{
         font-size: large;
     }
-    h4:hover{
+ h4:hover{
         text-decoration: underline;
+        transition-duration: 1s;
     }
 /* Footer */
 .footer {
