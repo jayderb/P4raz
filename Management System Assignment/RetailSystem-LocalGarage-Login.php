@@ -1,9 +1,10 @@
 <?php
 // Initialize the session
 session_start();
+$_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
 // Check if the user is already logged in, if yes redirect to appropriate dashboard
-if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true) {
+if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true && isset($_SESSION["role"])) {
     switch ($_SESSION["role"]) {
         case 'manager':
             header("location: admin/dashboard.php");
@@ -11,22 +12,25 @@ if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true) {
         case 'customer':
             header("location: customer/dashboard.php");
             break;
-        case 'employee':
+        case 'sales':
             header("location: sales/dashboard.php");
             break;
         case 'customs':
             header("location: customs/dashboard.php");
             break;
         default:
+            session_unset();
+            session_destroy();
+            header("location: RetailSystem-LocalGarage-Login.php?error=invalid_role");
             break;
     }
     exit;
 }
 
 // Check for error messages
-$login_err = isset($_SESSION['login_err']) ? $_SESSION['login_err'] : '';
-$email_err = isset($_SESSION['email_err']) ? $_SESSION['email_err'] : '';
-$password_err = isset($_SESSION['password_err']) ? $_SESSION['password_err'] : '';
+$login_err = isset($_SESSION['login_err']) ? htmlspecialchars($_SESSION['login_err']) : '';
+$email_err = isset($_SESSION['email_err']) ? htmlspecialchars($_SESSION['email_err']) : '';
+$password_err = isset($_SESSION['password_err']) ? htmlspecialchars($_SESSION['password_err']) : '';
 
 // Clear session error variables
 unset($_SESSION['login_err']);
@@ -126,7 +130,7 @@ body {
 }
 
 .navbar .main-nav ul li a:hover {
-    color: #ffffff; /* No hover effect in image */
+    color: #ffffff;
 }
 
 .navbar .search-container {
@@ -157,7 +161,7 @@ body {
 }
 
 .navbar .search-button:hover {
-    background: #e6b800; /* Slightly darker yellow for hover */
+    background: #e6b800;
 }
 
 /* Sub-Header */
@@ -202,10 +206,10 @@ body {
 }
 
 .sub-header .quick-links a:hover {
-    color: #ffffff; /* No hover effect in image */
+    color: #ffffff;
 }
 
-/* Video and Login Container (unchanged) */
+/* Video and Login Container */
 .video-container {
     position: fixed;
     top: 0;
@@ -233,6 +237,7 @@ body {
     text-align: center;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     backdrop-filter: blur(5px);
+    margin: 20px auto; /* Added for spacing */
 }
 
 .login-container:hover {
@@ -286,6 +291,7 @@ body {
     background-color: rgba(249, 249, 249, 0.8);
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
     box-sizing: border-box;
+    margin-bottom: 15px; /* Replaced <br> tags */
 }
 
 .login-container input[type="email"]:focus,
@@ -325,25 +331,26 @@ body {
     transform: translateY(0);
 }
 
-.login-container center p {
+.login-container p.signup-link {
     font-size: 14px;
     color: #7f8c8d;
     margin-top: 20px;
+    text-align: center; /* Replaced <center> tag */
 }
 
-.login-container center p a {
+.login-container p.signup-link a {
     color: #3498db;
     text-decoration: none;
     font-weight: 600;
     transition: color 0.3s ease;
 }
 
-.login-container center p a:hover {
+.login-container p.signup-link a:hover {
     color: #2980b9;
     text-decoration: underline;
 }
 
-/* Services Section (unchanged) */
+/* Services Section */
 .services-section {
     padding: 60px 0;
     background: #fff;
@@ -416,7 +423,7 @@ body {
     text-decoration: underline;
 }
 
-/* Logo Selector Section (unchanged) */
+/* Logo Selector Section */
 .logo-selector-section {
     padding: 60px 0;
     background: #ecf0f1;
@@ -517,7 +524,7 @@ body {
     display: block;
 }
 
-/* Management Section (unchanged) */
+/* Management Section */
 .management-section {
     padding: 60px 0;
     background: #fff;
@@ -563,7 +570,7 @@ body {
     border-radius: 8px;
 }
 
-/* Footer (unchanged) */
+/* Footer */
 footer {
     background: #2c3e50;
     color: #ecf0f1;
@@ -628,7 +635,7 @@ footer {
     color: #7f8c8d;
 }
 
-/* Responsive Design (unchanged) */
+/* Responsive Design */
 @media (max-width: 768px) {
     .navbar .hamburger {
         display: block;
@@ -734,7 +741,7 @@ footer {
         font-size: 13px;
     }
 
-    .login-container center p {
+    .login-container p.signup-link {
         font-size: 12px;
     }
 }
@@ -749,7 +756,7 @@ footer {
             </div>
             <nav class="main-nav">
                 <ul>
-                    <li><a href="RetailSystem-Home.php">HOME</a></li>
+                    <li><a href="RetailSytsem-Home.html">HOME</a></li>
                     <li><a href="#">MAINTENANCE</a></li>
                     <li><a href="#">AUTO REPAIR</a></li>
                     <li><a href="#">PRICE LIST</a></li>
@@ -791,6 +798,7 @@ footer {
 
         <div class="login-container">
             <form id="loginForm" action="login_process.php" method="post">
+                <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                 <h1>Login</h1>
                 <p>Access Your ZedAuto Account</p>
 
@@ -802,19 +810,17 @@ footer {
                     <div class="error-message"><?php echo $email_err; ?></div>
                 <?php endif; ?>
                 <label for="email">Email:</label>
-                <input type="email" name="email" id="email" placeholder="Enter your email" required>
-                <br><br>
+                <input type="email" name="email" id="email" placeholder="Enter your email" required aria-label="Enter your email address">
 
                 <?php if (!empty($password_err)): ?>
                     <div class="error-message"><?php echo $password_err; ?></div>
                 <?php endif; ?>
                 <label for="password">Password:</label>
-                <input type="password" name="password" id="password" placeholder="Enter your password" required>
-                <br><br>
+                <input type="password" name="password" id="password" placeholder="Enter your password" required aria-label="Enter your password">
 
                 <input type="submit" class="login-btn" value="Login">
             </form>
-            <center><p>Don't have an account? <a href="RetailSystem-SignUp.php">Sign up!</a></p></center>
+            <p class="signup-link">Don't have an account? <a href="RetailSystem-SignUp.php">Sign up!</a></p>
         </div>
     </div>
 
@@ -866,6 +872,14 @@ footer {
         const navMenu = document.querySelector('.main-nav ul');
         hamburger.addEventListener('click', () => {
             navMenu.classList.toggle('active');
+        });
+
+        // Close menu when a nav link is clicked
+        const navLinks = document.querySelectorAll('.main-nav ul li a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                navMenu.classList.remove('active');
+            });
         });
     </script>
 </body>

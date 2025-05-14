@@ -3,9 +3,13 @@
 session_start();
 
 // Check if the user is already logged in
-if(isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true) {
-    // Redirect user based on role
+if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true && isset($_SESSION["role"])) {
     redirectBasedOnRole($_SESSION["role"]);
+    exit;
+} else if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true) {
+    session_unset();
+    session_destroy();
+    header("location: RetailSystem-LocalGarage-Login.php?error=invalid_role");
     exit;
 }
 
@@ -17,49 +21,56 @@ $email = $password = "";
 $email_err = $password_err = $login_err = "";
 
 // Processing form data when form is submitted
-if($_SERVER["REQUEST_METHOD"] == "POST") {
-    
-    // Check if email is empty
-    if(empty(trim($_POST["email"]))) {
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Validate CSRF token
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        $login_err = "Invalid CSRF token.";
+        $_SESSION['login_err'] = $login_err;
+        header("location: RetailSystem-LocalGarage-Login.php");
+        exit;
+    }
+    unset($_SESSION['csrf_token']);
+
+    // Validate email
+    if (empty(trim($_POST["email"]))) {
         $email_err = "Please enter your email.";
+    } else if (!filter_var(trim($_POST["email"]), FILTER_VALIDATE_EMAIL)) {
+        $email_err = "Please enter a valid email address.";
     } else {
         $email = trim($_POST["email"]);
     }
     
-    // Check if password is empty
-    if(empty(trim($_POST["Password"]))) {
+    // Validate password
+    if (empty(trim($_POST["password"]))) {
         $password_err = "Please enter your password.";
     } else {
-        $password = trim($_POST["Password"]);
+        $password = trim($_POST["password"]);
     }
     
     // Validate credentials
-    if(empty($email_err) && empty($password_err)) {
+    if (empty($email_err) && empty($password_err)) {
         // Prepare a select statement
         $sql = "SELECT id, email, password, role, first_name, last_name FROM users WHERE email = :email";
         
-        if($stmt = $conn->prepare($sql)) {
+        if ($stmt = $conn->prepare($sql)) {
             // Bind variables to the prepared statement as parameters
             $stmt->bindParam(":email", $param_email, PDO::PARAM_STR);
-            
-            // Set parameters
             $param_email = $email;
             
             // Attempt to execute the prepared statement
-            if($stmt->execute()) {
+            if ($stmt->execute()) {
                 // Check if email exists, if yes then verify password
-                if($stmt->rowCount() == 1) {
-                    if($row = $stmt->fetch()) {
+                if ($stmt->rowCount() == 1) {
+                    if ($row = $stmt->fetch()) {
                         $id = $row["id"];
-                        $email = $row["email"];
                         $hashed_password = $row["password"];
                         $role = $row["role"];
                         $first_name = $row["first_name"];
                         $last_name = $row["last_name"];
                         
-                        if(password_verify($password, $hashed_password)) {
-                            // Password is correct, start a new session
-                            session_start();
+                        if (password_verify($password, $hashed_password)) {
+                            // Password is correct, regenerate session ID
+                            session_regenerate_id(true);
                             
                             // Store data in session variables
                             $_SESSION["loggedin"] = true;
@@ -68,29 +79,32 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                             $_SESSION["role"] = $role;
                             $_SESSION["first_name"] = $first_name;
                             $_SESSION["last_name"] = $last_name;
-
-                            //debugging
-                            echo "Role: " . $role . "<br>";
-                            echo "Redirecting to dashboard...<br>";
                             
                             // Redirect user based on role
                             redirectBasedOnRole($role);
                         } else {
-                            // Password is not valid
-                            $login_err = "Invalid email or password.";
+                            $login_err = "Incorrect password.";
                         }
                     }
                 } else {
-                    // Email doesn't exist
-                    $login_err = "Invalid email or password.";
+                    $login_err = "No account found with that email.";
                 }
             } else {
-                $login_err = "Oops! Something went wrong. Please try again later.";
+                $login_err = "Database error. Please try again later.";
             }
-
-            // Close statement
             unset($stmt);
+        } else {
+            $login_err = "Database preparation error. Please try again later.";
         }
+    }
+    
+    // Store errors and redirect
+    if (!empty($email_err) || !empty($password_err) || !empty($login_err)) {
+        $_SESSION['login_err'] = $login_err;
+        $_SESSION['email_err'] = $email_err;
+        $_SESSION['password_err'] = $password_err;
+        header("location: RetailSystem-LocalGarage-Login.php");
+        exit;
     }
     
     // Close connection
@@ -110,28 +124,14 @@ function redirectBasedOnRole($role) {
         case 'customs':
             $location = "customs/dashboard.php";
             break;
-        case 'sales':
+        case 'employee':
             $location = "sales/dashboard.php";
             break;
         default:
-            $location = "index.php";
+            $location = "RetailSystem-LocalGarage-Login.php?error=invalid_role";
             break;
     }
-    // Debugging
-    echo "Attempting to redirect to: " . $location . "<br>";
-    echo "Full URL: " . $_SERVER['REQUEST_SCHEME'] . "://" . $_SERVER['HTTP_HOST'] . "/" . $location . "<br>";
-    // Uncomment the next line to stop execution and inspect the output
-    // exit;
     header("location: $location");
-    exit;
-}
-
-// If there were errors, redirect back to login page with error message
-if(!empty($email_err) || !empty($password_err) || !empty($login_err)) {
-    $_SESSION['login_err'] = $login_err;
-    $_SESSION['email_err'] = $email_err;
-    $_SESSION['password_err'] = $password_err;
-    header("location: RetailSystem-LocalGarage-Login.php");
     exit;
 }
 ?>

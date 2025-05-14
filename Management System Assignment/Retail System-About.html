@@ -3,257 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Car Part Retail System - About</title>
+    <title>ZedAuto - About</title>
     <!-- Favicon -->
     <link rel="icon" type="image/ico" href="favicon.ico">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./Static/images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./Static/images/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
-    <style>
-        body {
-            padding: 0;
-            margin: 0;
-            background-color: black;
-            text-align: center;
-            font-family: 'Montserrat', sans-serif;
-            color: white;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .header {
-            width: 100%;
-            padding: 10px;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-around;
-            flex-wrap: wrap;
-            gap: 5px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .Home, .Sign-Up, .Login, .Contact, .About {
-            text-decoration: none;
-            color: yellow;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 1rem;
-            padding: 5px 10px;
-            transition: all 0.3s ease;
-        }
-
-        .Home:hover, .Sign-Up:hover, .Login:hover, .Contact:hover, .About:hover {
-            text-shadow: 0px 5px 5px yellow;
-            transform: scale(1.07);
-        }
-
-        .Home:active, .Sign-Up:active, .Login:active, .Contact:active, .About:active {
-            text-shadow: 0px 5px 5px yellow;
-        }
-
-        h1 {
-            font-weight: bold;
-            color: yellow;
-            text-align: left;
-            margin: 10px 0;
-            font-size: 2rem;
-            flex-grow: 1;
-            padding: 0 10px;
-        }
-        h1:hover{
-            text-decoration: underline;
-        }
-        .main-content {
-            flex: 1;
-            padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        .title-container {
-            margin: 20px 0;
-        }
-
-        .title-container b {
-            font-size: 2rem;
-            text-shadow: -5px -10px 10px yellow;
-        }
-
-        .title-container p {
-            color: white;
-            text-shadow: 5px -10px 10px yellow;
-            margin: 0;
-        }
-
-        .paragraph-container {
-            text-align: center;
-            color: white;
-            font-size: 1rem;
-            font-family: Verdana, Geneva, Tahoma, sans-serif;
-            line-height: 1.6;
-            margin: 20px auto;
-            max-width: 800px;
-            padding: 0 15px;
-        }
-
-        .Container {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin: 30px auto;
-            max-width: 1200px;
-        }
-
-        .Local, .Warehouse, .Manager, .Customer {
-            border: 1px solid yellow;
-            border-radius: 7px;
-            padding: 12px;
-            flex: 1;
-            min-width: 200px;
-            max-width: 300px;
-            box-sizing: border-box;
-            transition: all 0.3s ease;
-        }
-
-        .Local:hover, .Warehouse:hover, .Manager:hover, .Customer:hover {
-            box-shadow: 0 5px 15px yellow;
-            transform: scale(1.03);
-        }
-
-        .footer{
-            padding: 15px;
-            text-align: center;
-            width: 100%;
-            margin-top: auto;
-            text-align: center;
-        }
-
-        #copyright {
-            color: yellow;
-            margin: 0;
-            font-size: 1rem;
-            text-align: center;
-        }
-
-        /* Media Queries for Responsiveness */
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                padding: 15px 0;
-            }
-            
-            h1 {
-                text-align: center;
-                margin-bottom: 15px;
-            }
-            
-            .Home, .Sign-Up, .Login, .Contact, .About {
-                margin: 5px 0;
-            }
-            
-            .title-container b {
-                font-size: 1.5rem;
-            }
-            
-            .Container {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .Local, .Warehouse, .Manager, .Customer {
-                width: 80%;
-                max-width: none;
-                margin-bottom: 15px;
-            }
-            
-            .paragraph-container {
-                font-size: 0.9rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .title-container b {
-                font-size: 1.2rem;
-            }
-            
-            .Local, .Warehouse, .Manager, .Customer {
-                width: 95%;
-                padding: 10px;
-            }
-            
-            .Container {
-                gap: 10px;
-            }
-            
-            #copyright {
-                font-size: 0.8rem;
-            }
-        }
-    </style>
+    <!-- Tailwind CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <div class="header">
-        <h1 style="text-shadow: 0 5px 5px yellow;"><i><span style="color: white;text-shadow: 0 5px 5px white;">Zed</span>Auto Spares</i></h1>
-        <a href="Retail Sytsem-Home.html" class="Home"><h2>Home</h2></a>
-        <a href="Retail System-Sign Up.html" class="Sign-Up"><h2>Sign-Up</h2></a>
-        <a href="Retail System-Login.html" class="Login"><h2>Log in</h2></a>
-        <a href="Retail System-Contact.html" class="Contact"><h2>Contact</h2></a>
-        <a href="Retail System-About.html" class="About"><h2>About</h2></a>
+<body class="bg-gray-100">
+    <header class="navbar bg-gray-900 text-white">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <a href="RetailSytsem-Home.html" class="text-2xl font-bold">ZedAuto</a>
+            <div class="hamburger md:hidden">
+                <i class="fas fa-bars text-2xl"></i>
+            </div>
+            <nav class="main-nav hidden md:flex">
+                <ul class="flex space-x-6 items-center">
+                    <li><a href="Retail Sytsem-Home.html" class="hover:text-yellow-400">HOME</a></li>
+                    <li><a href="maintenance.php" class="hover:text-yellow-400">MAINTENANCE</a></li>
+                    <li><a href="auto-repair.php" class="hover:text-yellow-400">AUTO REPAIR</a></li>
+                    <li><a href="#" class="hover:text-yellow-400">PRICE LIST</a></li>
+                    <li><a href="#" class="hover:text-yellow-400">REVIEWS</a></li>
+                    <li><a href="about.php" class="hover:text-yellow-400">ABOUT</a></li>
+                    <li><a href="contact.php" class="hover:text-yellow-400">CONTACT</a></li>
+                    <li>
+                        <div class="flex">
+                            <input type="text" class="search px-2 py-1 rounded-l-md" placeholder="Search...">
+                            <button type="submit" class="search-button bg-yellow-400 text-gray-900 px-4 py-1 rounded-r-md hover:bg-yellow-500">SEARCH</button>
+                        </div>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <div class="bg-gray-800 py-2">
+            <div class="container mx-auto px-4 flex justify-between text-sm">
+                <div class="flex space-x-4">
+                    <div><i class="fas fa-map-marker-alt"></i> Lusaka, Zambia</div>
+                    <div><i class="fas fa-phone"></i> + (260) 987654321</div>
+                    <div><i class="fas fa-envelope"></i> <a href="mailto:info@zedauto.com">info@zedauto.com</a></div>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="sell.html" class="hover:text-yellow-400">Sell Car</a>
+                    <a href="RetailSystem-LocalGarage-Login.php" class="hover:text-yellow-400">Buy Car</a>
+                    <a href="RetailSystem-Signup.php" class="hover:text-yellow-400">Order Parts</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="video-container">
+        <video autoplay muted loop id="video">
+            <source src="./Static/Videos/2025 Toyota Land Cruiser - Toyota.com.mp4">
+            Your browser does not support HTML5 video.
+        </video>
+        <div class="text-overlay">
+            <h2 class="text-4xl md:text-6xl font-bold mb-4">About ZedAuto</h2>
+            <p class="text-xl mb-6">Your trusted partner in automotive services and parts.</p>
+            <a href="contact.php" class="bg-yellow-400 text-gray-900 px-6 py-3 rounded-md hover:bg-yellow-500 transition">Contact Us</a>
+        </div>
     </div>
-    
-    <div class="main-content">
-        <div class="title-container">
-            <b><p style="text-shadow: 0 5px 5px white;">About <span style="color:white; font-weight: bold; font-style: italic;text-shadow: 0 5px 5px white;">Zed</span><span style="color: yellow;text-shadow: 0 5px 5px yellow;">Auto Spares</span></p></b>
-        </div>
-        
-        <div class="paragraph-container">
-            <p>Welcome to Zed Auto Spares, your trusted partner in car parts retail and management. Established in 2025, we have been dedicated to providing high-quality car parts and exceptional service to our customers nationwide.</p>
-            <p>Our mission is to ensure that every vehicle owner has access to the parts they need to keep their vehicles running smoothly. Whether you're a local garage, a warehouse, a manager, or a customer, our system is designed to meet your needs efficiently and effectively.</p>
-            <p>At Zed Auto Spares, we pride ourselves on our extensive inventory, competitive pricing, and a team of knowledgeable professionals ready to assist you. Our commitment to excellence has made us a leader in the automotive parts industry.</p>
-        </div>
-        
-        <h2 style="color: yellow;">Our Services</h2>
-        <div class="Container">
-            <div class="Local">
-                <strong style="color: yellow; font-weight: bold; font-size: larger;">Local Garage Stock Management:</strong><br><span style="color: white;font-size: larger;">Streamline your inventory and manage your stock with ease.</span>
-            </div>
-            <div class="Warehouse">
-                <strong style="color: yellow;font-weight: bold; font-size: larger;">Warehouse Stock Dispatch:</strong><br><span style="color: white;font-size: larger;">Efficiently dispatch parts from our state-of-the-art warehouses.</span>
-            </div>
-            <div class="Manager">
-                <strong style="color: yellow; font-weight: bold;font-size: larger;">Manager Dashboard:</strong><br><span style="color: white; font-size: larger;"> Comprehensive tools for managing your operations and analytics.</span>
-            </div>
-            <div class="Customer">
-                <strong style="color: yellow; font-weight: bold; font-size: larger;">Customer Order:</strong><br><span style="color: white; font-size: larger;"> Easy and convenient ordering process for all your car part needs.</span>
+
+    <section class="about-section py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-4">About <span style="color: #facc15;">ZedAuto</span></h2>
+            <div class="text-center mb-8 max-w-3xl mx-auto">
+                <p class="text-lg">Welcome to ZedAuto, your trusted partner in car parts retail and management. Established in 2025, we have been dedicated to providing high-quality car parts and exceptional service to our customers nationwide.</p>
+                <p class="text-lg mt-4">Our mission is to ensure that every vehicle owner has access to the parts they need to keep their vehicles running smoothly. Whether you're a local garage, a warehouse, a manager, or a customer, our system is designed to meet your needs efficiently and effectively.</p>
+                <p class="text-lg mt-4">At ZedAuto, we pride ourselves on our extensive inventory, competitive pricing, and a team of knowledgeable professionals ready to assist you. Our commitment to excellence has made us a leader in the automotive parts industry.</p>
             </div>
         </div>
-    </div>
-    
-    <footer class="footer">
-        <h3 id="copyright">Copyright &copy; 2025 Zed Auto Spares. All rights reserved.</h3>
+    </section>
+
+    <section class="services-section py-16 bg-gray-100">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-8">Our Services</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="service-card bg-gray-50 p-6 rounded-lg shadow-md transition transform">
+                    <i class="fas fa-tools text-4xl text-yellow-400 mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2" style="color: rgb(24, 3, 24);">Local Garage Stock Management</h3>
+                    <p>Streamline your inventory and manage your stock with ease.</p>
+                    <a href="#" class="text-yellow-400 hover:underline mt-2 inline-block">Learn More</a>
+                </div>
+                <div class="service-card bg-gray-50 p-6 rounded-lg shadow-md transition transform">
+                    <i class="fas fa-warehouse text-4xl text-yellow-400 mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2" style="color: rgb(5, 5, 21);">Warehouse Stock Dispatch</h3>
+                    <p>Efficiently dispatch parts from our state-of-the-art warehouses.</p>
+                    <a href="#" class="text-yellow-400 hover:underline mt-2 inline-block">Learn More</a>
+                </div>
+                <div class="service-card bg-gray-50 p-6 rounded-lg shadow-md transition transform">
+                    <i class="fas fa-tachometer-alt text-4xl text-yellow-400 mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2" style="color: rgb(24, 3, 24);">Manager Dashboard</h3>
+                    <p>Comprehensive tools for managing your operations and analytics.</p>
+                    <a href="#" class="text-yellow-400 hover:underline mt-2 inline-block">Learn More</a>
+                </div>
+                <div class="service-card bg-gray-50 p-6 rounded-lg shadow-md transition transform">
+                    <i class="fas fa-shopping-cart text-4xl text-yellow-400 mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2" style="color: rgb(24, 3, 24);">Customer Order</h3>
+                    <p>Easy and convenient ordering process for all your car part needs.</p>
+                    <a href="#" class="text-yellow-400 hover:underline mt-2 inline-block">Learn More</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-gray-900 text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">ZedAuto</h3>
+                    <p>Providing top-notch automotive services in Lusaka, Zambia.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="hover:text-yellow-400">Home</a></li>
+                        <li><a href="#" class="hover:text-yellow-400">About Us</a></li>
+                        <li><a href="#" class="hover:text-yellow-400">Services</a></li>
+                        <li><a href="#" class="hover:text-yellow-400">Contact</a></li>
+                        <li><a href="#" class="hover:text-yellow-400">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Connect With Us</h3>
+                    <div class="flex space-x-4">
+                        <a href="#" class="hover:text-yellow-400"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="hover:text-yellow-400"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="hover:text-yellow-400"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 text-center">
+                <span id="copyright">© 2025 ZedAuto. All rights reserved.</span>
+            </div>
+        </div>
     </footer>
-    
+
     <script>
-        // Function to update the copyright year
+        // Sticky Navbar
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('navbar-sticky');
+            } else {
+                navbar.classList.remove('navbar-sticky');
+            }
+        });
+
+        // Hamburger Menu Toggle
+        const hamburger = document.querySelector('.hamburger');
+        const navMenu = document.querySelector('.main-nav ul');
+        hamburger.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+
+        // Update Copyright Year
         function updateCopyright() {
             const copyrightElement = document.getElementById('copyright');
             const currentYear = new Date().getFullYear();
-            const baseYear = 2025; // The initial year in the copyright notice
-
-            // Check if the current year is greater than the base year
+            const baseYear = 2025;
             if (currentYear > baseYear) {
-                copyrightElement.textContent = `Copyright &copy; ${baseYear}-${currentYear} Zed Auto Spares. All rights reserved`;
+                copyrightElement.textContent = `© ${baseYear}-${currentYear} ZedAuto. All rights reserved.`;
             }
         }
-
-        // Call the function to update the copyright year
         updateCopyright();
     </script>
 </body>
