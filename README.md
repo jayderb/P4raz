@@ -1,12 +1,4 @@
-- 👋 Hi, I’m Perazim
-- 👀 I’m interested in gaming, anime, music, professional wrestling, web development, programming etc
-- 🌱 I’m currently learning html + css+ javascript+ Bootstrap, php, MySQl.
-- 💞️ I’m looking to collaborate on ...
-- 📫 How to reach me ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
-
-<!---
-P4raz/P4raz is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
-You can click the Preview link to take a look at your changes.
---->
+Instructions:
+1.  install Xampp to your local device.
+2.  Copy this entire folder to the C:\xampp\htdocs onto your local device.
+3.  Import then zedauto_db.sql to the xampp/phpmyadmin server.
