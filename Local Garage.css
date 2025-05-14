@@ -1,0 +1,116 @@
+body {
+            padding: 0;
+            margin: 0;
+            background-image: url("DesiCorr-VpCI-NW-4.jpg");
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed;
+            font-family: 'Montserrat', sans-serif;
+            text-align: center;
+        }
+        .header {
+            background-color: rgba(0, 0, 0, 0.7);
+            width: 100%;
+            position: fixed;
+            top: 0;
+            padding: 8px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-around; /* Space out items */
+            flex-wrap: wrap; /* Allow items to wrap on smaller screens */
+            gap: 10px; /* Reduce gap for smaller screens */
+        }
+        h1 {
+            color: yellow;
+            margin: 0;
+            font-size: 2.0rem;
+        }
+        section {
+            padding: 20px;
+            margin: 70px auto;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: yellow;
+            border: 1px solid white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 900px;
+        }
+        h2 {
+            color: yellow;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #emergencyPartName, #partName, #quantity, #orderPartName, #orderQuantity, #customerName, #paymentAmount, #orderedPart, #orderedQuantity{
+            background-color: rgba(0, 0, 0, 0.3);
+            color: white;
+        }
+        input, button {
+            margin: 5px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: rgba(0, 0, 0, 0.3);
+            color: white;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px whitesmoke;
+        }
+        .result {
+            margin-top: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .Home, .Sign-Up, .Login, .Contact, .About{
+            text-decoration: none;
+            color:yellow;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1rem; /* Responsive font size */
+        }
+        .Home:hover, .Sign-Up:hover, .Login:hover, .Contact:hover, .About:hover{
+            text-shadow: 0px 5px 5px yellow;
+            transition-duration: 0.4s;
+            cursor: pointer;
+             transform: scale(1.07);
+        }
+        h1:hover{
+             text-decoration: underline;
+        }
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem; /* Smaller font size for smaller screens */
+            }
+            section {
+                margin: 40px auto; /* Reduce margin for smaller screens */
+                padding: 15px;
+            }
+            input, button {
+                padding: 8px; /* Smaller padding for inputs and buttons */
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5rem; /* Even smaller font size for mobile devices */
+            }
+            section {
+                margin: 40px auto; /* Further reduce margin for mobile devices */
+                padding: 10px;
+            }
+            input, button {
+                padding: 6px; /* Smaller padding for mobile devices */
+            }
+            .Home {
+                padding: 8px; /* Smaller padding for the Home button */
+            }
+        }

@@ -1,0 +1,163 @@
+body {
+                padding: 0;
+                margin: 0;
+                text-align: center;
+                background-image: url("DesiCorr-VpCI-NW-4.jpg");
+                background-position: center;
+                background-repeat: no-repeat;
+                background-size: cover;
+                background-attachment: fixed;
+                font-family: 'Montserrat', sans-serif;
+            }
+
+            .header {
+                background-color: rgba(0, 0, 0, 0.7);
+                width: 100%;
+                position: sticky;
+                padding: 10px;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-around; /* Space out items */
+                flex-wrap: wrap; /* Allow items to wrap on smaller screens */
+                gap: 10px; /* Reduce gap for smaller screens */
+            }
+
+            .Home, .Sign-Up, .Login, .Contact, .About{
+                text-decoration: none;
+                color: yellow;
+                font-family: 'Montserrat', sans-serif;
+                font-size: 1rem; /* Responsive font size */
+            }
+
+            .Home:hover, .Sign-Up:hover, .Login:hover, .Contact:hover, .About:hover{
+                text-shadow: 0px 5px 5px yellow;
+                transition-duration: 0.2s;
+                cursor: pointer;
+                transform: scale(1.07);
+            }
+
+            h1 {
+                color: yellow;
+                margin: 0;
+                font-size: 2.0rem;
+            }
+            h1:hover{
+                text-decoration: underline;
+            }
+            section {
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                padding: 25px;
+                margin: 40px auto;
+                color: yellow;
+                background-color: rgba(0, 0, 0, 0.7);
+                border: 1px solid white;
+                border-radius: 9px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                width: 70%;
+                max-width: 900px;
+            }
+
+            button {
+                background-color:rgba(0, 0, 0, 0.3);
+                color: white;
+                cursor: pointer;
+                border-radius: 8px;
+                padding: 9px;
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+
+            button:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px whitesmoke;
+            }
+
+            .result {
+                margin-top: 10px;
+                font-weight: bold;
+                text-align: center;
+            }
+
+            #productName, #productPrice, #dispatchPartName, #dispatchQuantity,
+            #discountProductName, #discountPercentage {
+                margin-right: 7px;
+                border: 1px solid white;
+                border-radius: 9px;
+                color: white;
+                background-color: rgba(0, 0, 0, 0.3);
+                padding: 9px;
+                width: 100%;
+                max-width: 200px;
+                box-sizing: border-box;
+                margin-bottom: 10px;
+            }
+
+            .price-btn, .stock-btn, .discount-btn {
+                padding: 8px;
+                border: 1px solid white;
+            }
+
+            /* Responsive Styles */
+            @media (max-width: 768px) {
+                h1 {
+                    font-size: 2rem;
+                }
+
+                .header {
+                    flex-direction: column; /* Stack header items vertically */
+                    padding: 20px 10px; /* Add more padding */
+                }
+
+                .header h1 {
+                    font-size: 1.8rem; /* Smaller font size for header */
+                    text-align: center; /* Center the header text */
+                }
+
+                .Home, .Sign-Up, .Login, .Contact, .About{
+                    font-size: 0.9rem; /* Smaller font size for links */
+                }
+
+                section {
+                    padding: 15px;
+                }
+
+                #productName, #productPrice, #dispatchPartName, #dispatchQuantity,
+                #discountProductName, #discountPercentage {
+                    width: 100%;
+                    max-width: none;
+                }
+
+                button {
+                    width: 100%;
+                    margin-bottom: 10px;
+                }
+            }
+
+            @media (max-width: 480px) {
+                h1 {
+                    font-size: 1.5rem;
+                }
+
+                .header h1 {
+                    font-size: 1.5rem; /* Even smaller font size for very small screens */
+                }
+
+                .Home, .Sign-Up, .Login, .Contact, .About{
+                    font-size: 0.8rem; /* Smaller font size for links */
+                }
+
+                section {
+                    padding: 10px;
+                }
+
+                #productName, #productPrice, #dispatchPartName, #dispatchQuantity,
+                #discountProductName, #discountPercentage {
+                    padding: 8px;
+                }
+
+                button {
+                    padding: 8px;
+                }
+            }

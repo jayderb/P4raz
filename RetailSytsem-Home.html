@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZedAuto - Home</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/ico" href="favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./Static/images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./Static/images/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <!-- Tailwind CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-100">
+    <header class="navbar bg-gray-900 text-white">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <a href="RetailSytsem-Home.html" class="text-2xl font-bold">ZedAuto</a>
+            <div class="hamburger md:hidden">
+                <i class="fas fa-bars text-2xl"></i>
+            </div>
+            <nav class="main-nav hidden md:flex">
+                <ul class="flex space-x-6 items-center">
+                    <li><a href="Retail Sytsem-Home.html" class="hover:text-yellow-400">HOME</a></li>
+                    <li><a href="#" class="hover:text-yellow-400">MAINTENANCE</a></li>
+                    <li><a href="#" class="hover:text-yellow-400">AUTO REPAIR</a></li>
+                    <li><a href="#" class="hover:text-yellow-400">PRICE LIST</a></li>
+                    <li><a href="#" class="hover:text-yellow-400">REVIEWS</a></li>
+                    <li><a href="Retail System-About.html" class="hover:text-yellow-400">ABOUT</a></li>
+                    <li><a href="Retail System-Contact.html" class="hover:text-yellow-400">CONTACT</a></li>
+                    <li>
+                        <div class="flex">
+                            <input type="text" class="search px-2 py-1 rounded-l-md" placeholder="Search...">
+                            <button type="submit" class="search-button bg-yellow-400 text-gray-900 px-4 py-1 rounded-r-md hover:bg-yellow-500">SEARCH</button>
+                        </div>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <div class="bg-gray-800 py-2">
+            <div class="container mx-auto px-4 flex justify-between text-sm">
+                <div class="flex space-x-4">
+                    <div><i class="fas fa-map-marker-alt"></i> Lusaka, Zambia</div>
+                    <div><i class="fas fa-phone"></i> + (260) 987654321</div>
+                    <div><i class="fas fa-envelope"></i> <a href="mailto:info@zedauto.com">info@zedauto.com</a></div>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="sell.html" class="hover:text-yellow-400">Sell Car</a>
+                    <a href="RetailSystem-LocalGarage-Login.php" class="hover:text-yellow-400">Buy Car</a>
+                    <a href="RetailSystem-Signup.php" class="hover:text-yellow-400">Order Parts</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="video-container">
+        <video autoplay muted loop id="video">
+            <source src="./Static/Videos/2025 Toyota Land Cruiser - Toyota.com.mp4">
+            Your browser does not support HTML5 video.
+        </video>
+        <div class="text-overlay">
+            <h2 class="text-4xl md:text-6xl font-bold mb-4">Welcome to ZedAuto</h2>
+            <p class="text-xl mb-6">Let's get you back on the road.</p>
+            <a href="Retail System-Contact.html" class="bg-yellow-400 text-gray-900 px-6 py-3 rounded-md hover:bg-yellow-500 transition">Contact Us</a>
+        </div>
+    </div>
+
+    <section class="services-section py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-8">Our Services</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="service-card bg-gray-50 p-6 rounded-lg shadow-md transition transform">
+                    <i class="fas fa-car-side text-4xl text-yellow-400 mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2" style="color: rgb(24, 3, 24);">Car Tuning</h3>
+                    <img src="./Static/images/9-Tips-to-Become-the-Best-Local-Car-Servicing-Garage.jpg" alt="Car Tuning" class="w-full h-40 object-cover rounded-md mb-4">
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                    <a href="#" class="text-yellow-400 hover:underline mt-2 inline-block">Read More</a>
+                </div>
+                <div class="service-card bg-gray-50 p-6 rounded-lg shadow-md transition transform">
+                    <i class="fas fa-calendar-check text-4xl text-yellow-400 mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2" style="color: rgb(5, 5, 21);">Schedule Service</h3>
+                    <img src="./Static/images/9-Tips-to-Become-the-Best-Local-Car-Servicing-Garage.jpg" alt="Schedule Service" class="w-full h-40 object-cover rounded-md mb-4">
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                    <a href="#" class="text-yellow-400 hover:underline mt-2 inline-block">Read More</a>
+                </div>
+                <div class="service-card bg-gray-50 p-6 rounded-lg shadow-md transition transform">
+                    <i class="fas fa-car-battery text-4xl text-yellow-400 mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">Battery Diagnostics</h3>
+                    <p>Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                    <a href="#" class="text-yellow-400 hover:underline mt-2 inline-block">Read More</a>
+                </div>
+                <!-- Add more service cards similarly -->
+            </div>
+        </div>
+    </section>
+
+    <section class="logo-selector-section py-16 bg-gray-100">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-4">Select by Brand</h2>
+            <p class="text-center mb-8">Select a car brand to view our current stock</p>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
+                <a href="/stock-form?brand=toyota" class="logo-item flex flex-col items-center p-4 bg-white rounded-lg shadow-md transition transform">
+                    <img src="./Static/images/Toyota.jpg" alt="Toyota" class="w-24 h-24 object-contain">
+                    <span class="mt-2">Toyota</span>
+                </a>
+                <a href="/stock-form?brand=mercedes" class="logo-item flex flex-col items-center p-4 bg-white rounded-lg shadow-md transition transform">
+                    <img src="./Static/images/Mercedes-Benz-Logo-640x398.png" alt="Mercedes-Benz" class="w-24 h-24 object-contain">
+                    <span class="mt-2">Mercedes-Benz</span>
+                </a>
+                <a href="/stock-form?brand=bmw" class="logo-item flex flex-col items-center p-4 bg-white rounded-lg shadow-md transition transform">
+                    <img src="./Static/images/BMW-Logo-768x432.png" alt="BMW" class="w-24 h-24 object-contain">
+                    <span class="mt-2">BMW</span>
+                </a>
+                <a href="/stock-form?brand=nissan" class="logo-item flex flex-col items-center p-4 bg-white rounded-lg shadow-md transition transform">
+                    <img src="./Static/images/Ferrari-Logo-1929-768x432.png" alt="Nissan" class="w-24 h-24 object-contain">
+                    <span class="mt-2">Nissan</span>
+                </a>
+                <div class="logo-item flex flex-col items-center p-4 bg-white rounded-lg shadow-md">
+                    <div class="dropdown">
+                        <button class="dropbtn flex items-center">
+                            <span>More brands</span>
+                            <i class="fas fa-chevron-down ml-2"></i>
+                        </button>
+                        <div class="dropdown-content">
+                            <a href="/stock-form?brand=nissan">Nissan</a>
+                            <a href="/stock-form?brand=honda">Honda</a>
+                            <a href="/stock-form?brand=ford">Ford</a>
+                            <a href="/stock-form?brand=chevrolet">Chevrolet</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="management-section py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-gray-50 p-6 rounded-lg shadow-md text-center">
+                    <h2 class="text-2xl font-bold text-yellow-400 mb-2">Local Garage Management</h2>
+                    <p class="mb-4">Streamline your inventory and manage your stock with ease.</p>
+                    <a href="Retail System-Local Garage-Login.html">
+                        <img src="./Static/images/9-Tips-to-Become-the-Best-Local-Car-Servicing-Garage.jpg" alt="Local Garage" class="w-full h-48 object-cover rounded-md" loading="lazy">
+                    </a>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-lg shadow-md text-center">
+                    <h2 class="text-2xl font-bold text-yellow-400 mb-2">Warehouse Stock Dispatch</h2>
+                    <p class="mb-4">Efficiently dispatch parts from our state-of-the-art warehouses.</p>
+                    <a href="Retail System-Warehouse-Login.html">
+                        <img src="./Static/images/ERP-Warehouse-Locations.jpg" alt="Warehouse" class="w-full h-48 object-cover rounded-md" loading="lazy">
+                    </a>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-lg shadow-md text-center">
+                    <h2 class="text-2xl font-bold text-yellow-400 mb-2">Manager Dashboard</h2>
+                    <p class="mb-4">Comprehensive tools for managing your operations or analytics.</p>
+                    <a href="RetailSystem-LocalGarage-Login.php">
+                        <img src="Top-6-Reasons-to-Pursue-an-MSc-in-Project-Management-1.jpg" alt="Manager" class="w-full h-48 object-cover rounded-md" loading="lazy">
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-gray-900 text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">ZedAuto</h3>
+                    <p>Providing top-notch automotive services in Lusaka, Zambia.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="hover:text-yellow-400">Home</a></li>
+                        <li><a href="#" class="hover:text-yellow-400">About Us</a></li>
+                        <li><a href="#" class="hover:text-yellow-400">Services</a></li>
+                        <li><a href="#" class="hover:text-yellow-400">Contact</a></li>
+                        <li><a href="#" class="hover:text-yellow-400">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Connect With Us</h3>
+                    <div class="flex space-x-4">
+                        <a href="#" class="hover:text-yellow-400"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="hover:text-yellow-400"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="hover:text-yellow-400"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 text-center">
+                © 2025 ZedAuto. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Sticky Navbar
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('navbar-sticky');
+            } else {
+                navbar.classList.remove('navbar-sticky');
+            }
+        });
+
+        // Hamburger Menu Toggle
+        const hamburger = document.querySelector('.hamburger');
+        const navMenu = document.querySelector('.main-nav ul');
+        hamburger.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Car Part Retail System - Warehouse</title>
+        <!-- Favicon -->
+    <link rel="icon" type="image/ico" href="favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="stylesheet" href="Warehouse.css">
+    </head>
+    <body>
+        <div class="header">
+            <a href="Retail System.Html" style="text-decoration: none;"><h1 style="text-shadow: 0 5px 5px yellow;"><i><span style="color: white; text-shadow:0 5px 5px white;">Zed</span>Auto Spares</i></h1></a>
+            <a href="Retail Sytsem-Home.html" class="Home"><h2>Home</h2></a>
+            <a href="Retail System-Sign Up.html" class="Sign-Up"><h2>Sign-Up</h2></a>
+            <a href="Retail System-Login.html" class="Login"><h2>Log In</h2></a>
+            <a href="Retail System-Contact.html" class="Contact"><h2>Contact</h2></a>
+            <a href="Retail System-About.html" class="About"><h2>About</h2></a>
+        </div>
+        <br>
+        <section id="warehouse">
+            <h2>Warehouse Stock Dispatch</h2>
+            <br>
+            <div>
+                <h3>Set National Prices</h3>
+                <input type="text" id="productName" placeholder="Product Name">
+                <input type="number" id="productPrice" placeholder="Price">
+                <button onclick="setPrice()" class="price-btn">Set Price</button>
+                <p id="priceResult" class="result"></p>
+            </div>
+            <div>
+                <h3>Set National Discounts</h3>
+                <input type="text" id="discountProductName" placeholder="Product Name">
+                <input type="number" id="discountPercentage" placeholder="Discount Percentage">
+                <button onclick="setDiscount()" class="discount-btn">Set Discount</button>
+                <p id="discountResult" class="result"></p>
+            </div>
+            <div>
+                <h3>Dispatch Stock</h3>
+                <input type="text" id="dispatchPartName" placeholder="Part Name">
+                <input type="number" id="dispatchQuantity" placeholder="Quantity">
+                <button onclick="dispatchStock()" class="stock-btn">Dispatch Stock</button>
+                <p id="dispatchResult" class="result"></p>
+            </div>
+        </section>
+
+        <script>
+            // Store national prices and discounts
+            const nationalPrices = {};
+            const nationalDiscounts = {};
+
+            // Store stock levels for each garage
+            const garageStock = {
+                "Garage A": {},
+                "Garage B": {},
+                "Garage C": {}
+            };
+
+            // Function to set national prices
+            function setPrice() {
+                const productName = document.getElementById('productName').value;
+                const productPrice = document.getElementById('productPrice').value;
+                nationalPrices[productName] = productPrice;
+                document.getElementById('priceResult').innerText = `Set price of K${productPrice} to ${productName}`;
+            }
+
+            // Function to set national discounts
+            function setDiscount() {
+                const productName = document.getElementById('discountProductName').value;
+                const discountPercentage = document.getElementById('discountPercentage').value;
+                nationalDiscounts[productName] = discountPercentage;
+                document.getElementById('discountResult').innerText = `Set discount for ${productName} to ${discountPercentage}%`;
+            }
+
+            // Function to dispatch stock
+            function dispatchStock() {
+                const partName = document.getElementById('dispatchPartName').value;
+                const quantity = parseInt(document.getElementById('dispatchQuantity').value);
+
+                // Distribute stock to all garages
+                for (const garage in garageStock) {
+                    if (!garageStock[garage][partName]) {
+                        garageStock[garage][partName] = 0;
+                    }
+                    garageStock[garage][partName] += quantity;
+                }
+
+                document.getElementById('dispatchResult').innerText = `Dispatched ${quantity} units of ${partName} to all garages.`;
+            }
+
+            // Simulate weekly deliveries
+            function weeklyDeliveries() {
+                console.log("Weekly delivery in progress...");
+                for (const garage in garageStock) {
+                    for (const part in garageStock[garage]) {
+                        garageStock[garage][part] += 10; // Add 10 units of each part weekly
+                    }
+                }
+                console.log("Weekly delivery completed. Updated stock:", garageStock);
+            }
+
+            // Run weekly deliveries every 7 days (604800000 milliseconds)
+            setInterval(weeklyDeliveries, 604800000);
+        </script>
+    </body>
+</html>

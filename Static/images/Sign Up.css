@@ -1,0 +1,99 @@
+         body {
+            padding: 0;
+            margin: 0;
+            background-image: url('DesiCorr-VpCI-NW-4.jpg');
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .Container {
+            text-align: center;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: lightseagreen;
+            border: 1px solid lightseagreen;
+            border-radius: 9px;
+            width: 90%;
+            max-width: 450px;
+            height: auto;
+            margin: 80px auto;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        .email, .password {
+            border: 1px solid lightseagreen;
+            border-radius: 10px;
+            padding: 13px;
+            background-color: white (0, 0, 0, 0.7);
+            color: black;
+            width: 100%;
+            max-width: 300px;
+            margin: 10px 0;
+            box-sizing: border-box;
+            font-size: larger;
+        }
+        .Sign-Up-btn {
+            border: 1px solid lightseagreen;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 150px;
+            padding: 12px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            margin-top: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .Sign-Up-btn:hover {
+            cursor: pointer;
+            transform: scale(1.05);
+            box-shadow: 0px 10px 10px lightseagreen;
+        }
+
+        .Sign-Up-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Media Queries for Responsiveness */
+        @media (max-width: 768px) {
+            .Container {
+                margin: 80px auto;
+                padding: 15px;
+            }
+
+            .email, .password {
+                max-width: 250px;
+            }
+
+            .Sign-Up-btn {
+                max-width: 130px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .Container {
+                margin: 187px auto;
+                padding: 10px;
+            }
+
+            .email, .password {
+                max-width: 200px;
+                padding: 10px;
+            }
+
+            .Sign-Up-btn {
+                max-width: 100px;
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+        }

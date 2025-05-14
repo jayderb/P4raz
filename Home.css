@@ -1,0 +1,208 @@
+body {
+    padding: 0;
+    margin: 0;
+    background-image: url("DesiCorr-VpCI-NW-4.jpg");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.header {
+    background-color: rgba(0, 0, 0, 0.7);
+    width: 100%;
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.Home, .Sign-Up, .Login, .Contact, .About {
+    text-decoration: none;
+    color: yellow;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1rem;
+}
+
+.Home:hover, .Sign-Up:hover, .Login:hover, .Contact:hover, .About:hover {
+    text-shadow: 0px 5px 5px yellow;
+    transition-duration: 0.2s;
+    cursor: pointer;
+    transform: scale(1.07);
+}
+.Home:active, .Sign-Up:active, .Login:active, .Contact:active, .About:active{
+    text-shadow: 0px 5px 5px yellow;
+}
+h1 {
+    font-weight: bold;
+    color: yellow;
+    text-align: left;
+    margin-top: 10px;
+    font-size: 2rem;
+}
+h1:hover{
+    text-decoration: underline;
+}
+p {
+    color: white;
+    text-align: center;
+    margin-top: 12px;
+    width: auto;
+    height: auto;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.Container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.paragraph-container {
+    margin-top: 15px;
+}
+
+.Local{
+    background-color: rgba(0, 0, 0, 0.7);
+    color: yellow;
+    border: 1px solid yellow;
+    border-radius: 5px;
+    padding: 15px;
+    margin-top: 20px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: large;
+    width: 100%;
+    max-width: 200px;
+    text-align: center;
+    position: relative; /* Required for animation */
+    animation-name: slide;
+    animation-timing-function: ease-in;
+    animation-duration: 2.9s;
+}
+.Warehouse{
+    background-color: rgba(0, 0, 0, 0.7);
+    color: yellow;
+    border: 1px solid yellow;
+    border-radius: 5px;
+    padding: 15px;
+    margin-top: 20px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: large;
+    width: 100%;
+    max-width: 200px;
+    text-align: center;
+    position: relative; /* Required for animation */
+    animation-name: slide;
+    animation-timing-function: ease-in;
+    animation-duration: 2.9s;
+}
+.Manager{
+    background-color: rgba(0, 0, 0, 0.7);
+    color: yellow;
+    border: 1px solid yellow;
+    border-radius: 5px;
+    padding: 15px;
+    margin-top: 20px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: large;
+    width: 100%;
+    max-width: 200px;
+    text-align: center;
+    position: relative; /* Required for animation */
+    animation-name: slide;
+    animation-timing-function: ease-in;
+    animation-duration: 2.9s;
+}
+.Customer{
+    background-color: rgba(0, 0, 0, 0.7);
+    color: yellow;
+    border: 1px solid yellow;
+    border-radius: 5px;
+    padding: 15px;
+    margin-top: 20px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: large;
+    width: 100%;
+    max-width: 200px;
+    text-align: center;
+    position: relative; /* Required for animation */
+    animation-name: slide;
+    animation-timing-function: ease-in;
+    animation-duration: 2.9s;
+}
+.Local:hover, .Warehouse:hover, .Manager:hover, .Customer:hover {
+    background-color: yellow;
+    color: black;
+    transform: scale(1.13);
+    border: 1px solid black;
+    transition-duration: 1.2s;
+    cursor: pointer;
+}
+.footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    padding: 8.2px;
+    background-color: rgba(0, 0, 0, 0.7);
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    font-weight: bold;
+    color: white;
+}
+@keyframes slide {
+    from{ transform: translate(-500px);
+
+    }
+ 
+     to{ transform: translate(0);
+    
+    }
+}
+/* Media Queries for Responsiveness */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 1.5rem;
+        text-align: center;
+    }
+    .header {
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+    }
+    .Home, .Sign-Up, .Login, .Contact, .About{
+        font-size: 0.9rem;
+    }
+    .Container {
+        margin-top: 10px;
+    }
+    .Local, .Warehouse, .Manager, .Customer {
+        width: 90%;
+        padding: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.2rem;
+    }
+    p {
+        font-size: 1rem;
+    }
+    .header {
+        padding: 5px;
+    }
+    .Home, .Sign-Up, .Login, .Contact, .About{
+        font-size: 0.8rem;
+    }
+    .Local, .Warehouse, .Manager, .Customer{
+        padding: 5px;
+    }
+}

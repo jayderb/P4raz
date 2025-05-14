@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retail System/Inventory</title>
+    <link rel="icon" type="image/ico" href="favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: black;
+            color: yellow;
+            font-family: 'Montserrat', sans-serif;
+            text-align: center;
+        }
+
+        .header {
+            position: fixed;
+            color: yellow;
+            width: 100%;
+            padding: 10px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .Home, .Sign-Up, .Login, .Contact, .About, .Car-Parts, .Order{
+            text-decoration: none;
+            color: yellow;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .Home:hover, .Sign-Up:hover, .Login:hover, .Contact:hover, .About:hover, .Car-Parts:hover, .Order:hover{
+            text-shadow: 0px 5px 5px yellow;
+            transition-duration: 0.2s;
+            cursor: pointer;
+            transform: scale(1.07);
+        }
+
+        h1 {
+            font-weight: bold;
+            color: yellow;
+            margin-top: 10px;
+            font-size: 2rem;
+        }
+        h1:hover{
+            text-decoration: underline;
+        }
+        .Container {
+            display: flex;
+            flex-wrap: wrap; /* Allow items to wrap on smaller screens */
+            gap: 28px;
+            justify-content: center; /* Center items horizontally */
+            padding: 10px; /* Add padding for better spacing */
+            color: yellow;
+        }
+
+        .Transmission, .Body-Shell, .Brake-Pads, .Spoiler, .Pistons, .Wheel, .Engine, .Steering-Wheel{
+            border-radius: 8px;
+            width: 275px;
+            height: 290px;
+            margin: 25px auto;
+            transition: transform 0.3s, box-shadow 0.3s; /* Smooth hover effect */
+        }
+
+        .Transmission:hover, .Body-Shell:hover, .Brake-Pads:hover, .Spoiler:hover, .Pistons:hover, .Wheel:hover, .Engine:hover, .Steering-Wheel:hover{
+            transform: scale(1.08);
+            box-shadow: 10px 10px 10px yellow;
+            cursor: pointer;
+        }
+        .Zed{
+          text-shadow: 0 5px 5px white;
+        }
+
+        /* Media Queries for Responsiveness */
+        @media (max-width: 1200px) {
+            .Transmission, .Body-Shell, .Brake-Pads, .Spoiler, .Pistons, .Wheel, .Engine, .Steering-Wheel{
+                width: 220px; /* Slightly smaller width for medium screens */
+                height: 450px;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .Transmission, .Body-Shell, .Brake-Pads, .Spoiler, .Pistons, .Wheel, .Engine, .Steering-Wheel{
+                width: 200px; /* Smaller width for tablets */
+                height: 400px;
+            }
+
+            h1 {
+                font-size: 1.8rem; /* Smaller heading for tablets */
+            }
+
+            .header {
+                flex-direction: row; /* Stack header items vertically */
+                gap: 3px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .Transmission, .Body-Shell, .Brake-Pads, .Spoiler, .Pistons, .Wheel, .Engine, .Steering-Wheel{
+                width: 180px; /* Smaller width for smaller tablets */
+                height: 350px;
+            }
+
+            h1 {
+                font-size: 1.5rem; /* Smaller heading for smaller tablets */
+            }
+
+            .Home, .Sign-Up, .Login, .Contact, .About, .Car-Parts {
+                font-size: 0.9rem; /* Smaller font size for links */
+            }
+        }
+
+        @media (max-width: 576px) {
+            .Transmission, .Body-Shell, .Brake-Pads, .Spoiler, .Pistons, .Wheel, .Engine, .Steering-Wheel{
+                width: 100%; /* Full width for mobile devices */
+                height: auto; /* Auto height to maintain aspect ratio */
+                margin: 10px 0; /* Reduce margin for mobile */
+            }
+
+            h1 {
+                font-size: 1.2rem; /* Smaller heading for mobile */
+            }
+
+            .header {
+                padding: 5px; /* Reduce padding for mobile */
+            }
+
+            .Home, .Sign-Up, .Login, .Contact, .About, .Car-Parts {
+                font-size: 0.8rem; /* Smaller font size for links */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="Retail System.Html" style="text-decoration: none;"><h1 style="text-shadow: 0 5px 5px yellow;"><i><span style="color: white; text-shadow:0 5px 5px white;">Zed</span>Auto Spares</i></h1></a>
+        <a href="Retail Sytsem-Home.html" class="Home"><h2>Home</h2></a>
+        <a href="Retail System-Sign Up.html" class="Sign-Up"><h2>Sign-Up</h2></a>
+        <a href="Retail System-Login.html" class="Login"><h2>Log in</h2></a>
+        <a href="Retail System-Contact.html" class="Contact"><h2>Contact</h2></a>
+        <a href="Retail System-About.html" class="About"><h2>About</h2></a>
+        <a href="Retail System-Customer.html" class="Order"><h2>Customer Order</h2></a>
+    </div>
+    <br><br><br><br><br>
+    <h1 style="text-shadow: 0 -10px 10px yellow;"><i>Available<span style="color: white;text-shadow: 0 -10px 10px white;"> Car Parts</span></i></h1>
+    <div class="Container">
+        <div>
+            <img src="automatic-car-transmission-044005202021-768x480.jpg" alt="Vehicle Transmission" class="Transmission" loading="lazy">
+            <h3>Transmission</h3>
+            <h3>K5,000</h3>
+        </div>
+        <div>
+            <img src="Bodyshells-MGBRoadster-Thumbs.jpg" alt="Vehicle Body Shell" class="Body-Shell" loading="lazy">
+            <h3>Body Shell</h3>
+            <h3>K11,900</h3>
+        </div>
+        <div>
+            <img src="Screenshot_20231110-143616.png" alt="Car Brake Pads" class="Brake-Pads" loading="lazy">
+            <h3>Brake Pads</h3>
+            <h3>K700</h3>
+        </div>
+        <div>
+            <img src="1468962017-seibon-carbon-fiber-spoiler.jpg" alt="Vehicle Spoiler" class="Spoiler" loading="lazy">
+            <h3>Spoiler</h3>
+            <h3>K1,000</h3>
+        </div>
+        <div>
+            <img src="3d-illustration-of-a-car-engine-block-and-pistons-3d-illustration-2K2KKK0.jpg" alt="Car Pistons" class="Pistons">
+            <h3>Pistons</h3>
+            <h3>K2,500</h3>
+        </div>
+        <div>
+            <img src="depositphotos_115773472-stock-photo-car-wheel-with-breke-disc.jpg" alt=" Car Wheel" class="Wheel" loading="lazy">
+            <h3>Wheels</h3>
+            <h3>K100</h3>
+        </div>
+         <div>
+            <img src= "car-engine.jpg" alt=" Car Engine" class="Engine" loading="lazy">
+            <h3>Engines</h3>
+            <h3>K345</h3>
+        </div>
+        <div>
+         <img src= "steering-wheel-2653335_1280.jpg" alt="Steering Wheel" class="Steering-Wheel" loading="lazy">
+          <h3>Steering Wheel</h3>
+          <h3>K765</h3>
+      </div>
+    </div>
+</body>
+</html>
