@@ -3,18 +3,16 @@
 session_start();
 
 // Debug session
-error_log("Attempting to access orders.php: " . $_SERVER['REQUEST_URI']);
-error_log("Session in orders.php: loggedin=" . (isset($_SESSION["loggedin"]) ? $_SESSION["loggedin"] : "unset") . 
+error_log("Session in stock-form.php: loggedin=" . (isset($_SESSION["loggedin"]) ? $_SESSION["loggedin"] : "unset") . 
           ", role=" . (isset($_SESSION["role"]) ? $_SESSION["role"] : "unset") . 
-          ", user_id=" . (isset($_SESSION["user_id"]) ? $_SESSION["user_id"] : "unset") . 
-          ", id=" . (isset($_SESSION["id"]) ? $_SESSION["id"] : "unset"));
+          ", user_id=" . (isset($_SESSION["user_id"]) ? $_SESSION["user_id"] : "unset"));
 
 // Check if the user is logged in and has the customer role
-if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || !isset($_SESSION["role"]) || $_SESSION["role"] !== "customer" || !isset($_SESSION["user_id"])) {
-    echo "Debug: Redirecting due to: loggedin=" . (isset($_SESSION["loggedin"]) ? $_SESSION["loggedin"] : "unset") . 
-         ", role=" . (isset($_SESSION["role"]) ? $_SESSION["role"] : "unset") . 
-         ", user_id=" . (isset($_SESSION["user_id"]) ? $_SESSION["user_id"] : "unset");
-    header("location: ../RetailSystem-LocalGarage-Login.php");
+if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || $_SESSION["role"] !== "customer" || !isset($_SESSION["user_id"])) {
+    error_log("Redirecting to login: loggedin=" . (isset($_SESSION["loggedin"]) ? $_SESSION["loggedin"] : "unset") . 
+              ", role=" . (isset($_SESSION["role"]) ? $_SESSION["role"] : "unset") . 
+              ", user_id=" . (isset($_SESSION["user_id"]) ? $_SESSION["user_id"] : "unset"));
+    header("location: ../RetailSystem-Customer-Login.php");
     exit;
 }
 
@@ -23,41 +21,104 @@ try {
     require_once "../config.php";
 } catch (PDOException $e) {
     error_log("Config error: " . $e->getMessage());
-    die("Connection failed. Please contact support.");
+    die("Connection failed: " . $e->getMessage());
 }
 
-// Initialize variables for messages
+// Initialize variables
 $success_msg = '';
 $error_msg = '';
+$brand = isset($_GET['brand']) ? trim($_GET['brand']) : '';
+$valid_brands = ['toyota', 'mercedes', 'bmw', 'nissan', 'honda', 'ford', 'chevrolet'];
 
-// Fetch customer email for notifications
-$customer_id = $_SESSION["user_id"];
-$sql = "SELECT email FROM users WHERE id = :id";
-$stmt = $conn->prepare($sql);
-$stmt->bindParam(":id", $customer_id, PDO::PARAM_INT);
-$stmt->execute();
-$customer = $stmt->fetch();
-$customer_email = $customer['email'] ?? '';
+// Validate brand
+if ($brand && !in_array(strtolower($brand), $valid_brands)) {
+    $brand = '';
+    $error_msg = "Invalid brand selected.";
+}
 
-// Fetch customer's orders
-$sql = "SELECT id, total, sale_date, status 
-        FROM sales 
-        WHERE customer_id = :customer_id 
-        ORDER BY sale_date DESC";
-$stmt = $conn->prepare($sql);
-$stmt->bindParam(":customer_id", $customer_id, PDO::PARAM_INT);
-$stmt->execute();
-$orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// Fetch car models for the selected brand
+$cars = [];
+if ($brand) {
+    try {
+        $sql = "SELECT id, model, price, stock_quantity 
+                FROM cars 
+                WHERE LOWER(brand) = :brand AND stock_quantity > 0";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(":brand", $brand, PDO::PARAM_STR);
+        $stmt->execute();
+        $cars = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $error_msg = "Error fetching car models: " . $e->getMessage();
+    }
+}
 
-// Check for status changes and send email if approved
-foreach ($orders as $order) {
-    if ($order['status'] === 'approved' && !isset($_SESSION['notified_' . $order['id']])) {
-        $to = $customer_email;
-        $subject = "Order Approved - ZedAuto";
-        $message = "Dear " . htmlspecialchars($_SESSION["first_name"]) . ",\n\nYour order (ID: " . $order['id'] . ") has been approved. Total: ZMK" . number_format($order['total'], 2) . "\n\nThank you for choosing ZedAuto!";
-        $headers = "From: no-reply@zedauto.com";
-        mail($to, $subject, $message, $headers);
-        $_SESSION['notified_' . $order['id']] = true; // Mark as notified
+// Handle form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['purchase'])) {
+    $car_id = intval($_POST['car_id']);
+    $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+    
+    try {
+        // Verify car exists and has stock
+        $sql = "SELECT price, stock_quantity FROM cars WHERE id = :id AND stock_quantity > 0";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(":id", $car_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $car = $stmt->fetch();
+        
+        if ($car) {
+            // Create sale record
+            $sql = "INSERT INTO sales (customer_id, total, sale_date, status) 
+                    VALUES (:customer_id, :total, NOW(), 'pending')";
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(":customer_id", $_SESSION['user_id'], PDO::PARAM_INT);
+            $stmt->bindParam(":total", $car['price'], PDO::PARAM_STR);
+            $stmt->execute();
+            $sale_id = $conn->lastInsertId();
+            
+            // Insert into sales_items
+            $sql = "INSERT INTO sales_items (sale_id, product_id, quantity, price) 
+                    VALUES (:sale_id, :product_id, 1, :price)";
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(":sale_id", $sale_id, PDO::PARAM_INT);
+            $stmt->bindParam(":product_id", $car_id, PDO::PARAM_INT);
+            $stmt->bindParam(":price", $car['price'], PDO::PARAM_STR);
+            $stmt->execute();
+            
+            // Decrease stock quantity
+            $sql = "UPDATE cars SET stock_quantity = stock_quantity - 1 WHERE id = :id";
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(":id", $car_id, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $success_msg = "Purchase request submitted successfully! Your order is pending.";
+            $response = ['success' => true, 'message' => $success_msg];
+            
+            // Refresh car list
+            $sql = "SELECT id, model, price, stock_quantity 
+                    FROM cars 
+                    WHERE LOWER(brand) = :brand AND stock_quantity > 0";
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(":brand", $brand, PDO::PARAM_STR);
+            $stmt->execute();
+            $cars = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } else {
+            $error_msg = "Selected car is out of stock or not found.";
+            $response = ['success' => false, 'message' => $error_msg];
+        }
+        
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode($response);
+            exit;
+        }
+    } catch (PDOException $e) {
+        $error_msg = "Error processing purchase: " . $e->getMessage();
+        $response = ['success' => false, 'message' => $error_msg];
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode($response);
+            exit;
+        }
     }
 }
 ?>
@@ -67,7 +128,7 @@ foreach ($orders as $order) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZedAuto - My Orders</title>
+    <title>ZedAuto - Purchase Car</title>
     <!-- Favicon -->
     <link rel="icon" type="image/ico" href="../favicon.ico">
     <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -129,7 +190,7 @@ foreach ($orders as $order) {
             padding: 2rem;
             flex: 1;
         }
-        .table-container {
+        .table-container, .form-container {
             background: #f9f9f9;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -142,6 +203,13 @@ foreach ($orders as $order) {
         .table tr:hover {
             background: #ecf0f1;
         }
+        .action-btn {
+            background: #2ecc71;
+            transition: background 0.2s ease;
+        }
+        .action-btn:hover {
+            background: #27ae60;
+        }
         .card {
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
@@ -149,51 +217,13 @@ foreach ($orders as $order) {
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
         }
-        .status-pending {
-            color: #e67e22;
-            font-weight: bold;
+        .message.success {
+            background: #e0f7fa;
+            color: #006064;
         }
-        .status-approved {
-            color: #3498db;
-            font-weight: bold;
-        }
-        .status-delivered {
-            color: #27ae60;
-            font-weight: bold;
-        }
-        .notification-bell {
-            cursor: pointer;
-            font-size: 1.25rem;
-            color: #3498db;
-        }
-        .notification-panel {
-            display: none;
-            position: absolute;
-            top: 2.5rem;
-            right: 0;
-            background: #ffffff;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            width: 300px;
-            z-index: 1000;
-            padding: 0.5rem;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        .notification-panel.active {
-            display: block;
-        }
-        .notification {
-            padding: 0.5rem;
-            border-bottom: 1px solid #eee;
-            font-size: 0.9rem;
-        }
-        .notification.approved {
-            color: #3498db;
-        }
-        .notification.delivered {
-            color: #27ae60;
+        .message.error {
+            background: #ffebee;
+            color: #b71c1c;
         }
         #topbar-mobile {
             display: none;
@@ -264,7 +294,7 @@ foreach ($orders as $order) {
             <div class="container mx-auto px-4">
                 <h2 class="sr-only">Customer Navigation</h2>
                 <nav>
-                    <a href="../RetailSytsem-Home.html">Home</a>
+                    <a href="dashboard.php">Dashboard</a>
                     <a href="stock-form.php">Browse Cars</a>
                     <a href="orders.php">My Orders</a>
                 </nav>
@@ -273,7 +303,7 @@ foreach ($orders as $order) {
         <!-- Mobile Top Bar Menu -->
         <div id="topbar-mobile" class="md:hidden">
             <div class="container mx-auto px-4 py-4 flex flex-col space-y-2">
-                <a href="../RetailSytsem-Home.html" class="text-white hover:text-[#f1c40f] transition px-4 py-2">Home</a>
+                <a href="dashboard.php" class="text-white hover:text-[#f1c40f] transition px-4 py-2">Dashboard</a>
                 <a href="stock-form.php" class="text-white hover:text-[#f1c40f] transition px-4 py-2">Browse Cars</a>
                 <a href="orders.php" class="text-white hover:text-[#f1c40f] transition px-4 py-2">My Orders</a>
             </div>
@@ -286,29 +316,9 @@ foreach ($orders as $order) {
         <section class="container mx-auto px-4">
             <div class="flex justify-between items-center mb-6">
                 <h1 class="text-3xl md:text-4xl font-semibold text-[#2c3e50]">
-                    My Orders
+                    Purchase Car - <?php echo $brand ? ucfirst(htmlspecialchars($brand)) : 'Select a Brand'; ?>
                 </h1>
                 <div class="flex items-center space-x-4">
-                    <div class="notifications relative">
-                        <span class="notification-bell" onclick="toggleNotifications()"><i class="fas fa-bell"></i></span>
-                        <div id="notification-panel" class="notification-panel">
-                            <?php
-                            $sql = "SELECT id, status FROM sales WHERE customer_id = :customer_id AND status IN ('approved', 'delivered') ORDER BY sale_date DESC";
-                            $stmt = $conn->prepare($sql);
-                            $stmt->bindParam(":customer_id", $customer_id, PDO::PARAM_INT);
-                            $stmt->execute();
-                            $notifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                            if (empty($notifications)) {
-                                echo "<div class='notification'>No new notifications.</div>";
-                            } else {
-                                foreach ($notifications as $notification) {
-                                    $class = $notification['status'];
-                                    echo "<div class='notification $class'>Order ID " . $notification['id'] . " is " . ucfirst($notification['status']) . "!</div>";
-                                }
-                            }
-                            ?>
-                        </div>
-                    </div>
                     <div class="flex items-center">
                         <img src="https://via.placeholder.com/40" alt="User" class="w-10 h-10 rounded-full mr-2">
                         <span class="text-[#7f8c8d] text-lg">Hi, <?php echo htmlspecialchars($_SESSION["first_name"]); ?>!</span>
@@ -317,44 +327,65 @@ foreach ($orders as $order) {
             </div>
             <!-- Success/Error Messages -->
             <?php if (!empty($success_msg)): ?>
-                <div class="mb-6 p-4 bg-[#e0f7fa] text-[#006064] rounded-md"><?php echo $success_msg; ?></div>
+                <div class="message success mb-6 p-4 rounded-md"><?php echo $success_msg; ?></div>
             <?php endif; ?>
             <?php if (!empty($error_msg)): ?>
-                <div class="mb-6 p-4 bg-[#ffebee] text-[#b71c1c] rounded-md"><?php echo $error_msg; ?></div>
+                <div class="message error mb-6 p-4 rounded-md"><?php echo $error_msg; ?></div>
             <?php endif; ?>
-            <!-- Orders Table -->
-            <div class="table-container card">
-                <h2 class="text-2xl font-medium text-[#2c3e50] mb-4">Order History</h2>
-                <div class="overflow-x-auto">
-                    <table class="table w-full">
-                        <thead>
-                            <tr>
-                                <th class="px-4 py-2 rounded-tl-md">Order ID</th>
-                                <th class="px-4 py-2">Total (ZMK)</th>
-                                <th class="px-4 py-2">Sale Date</th>
-                                <th class="px-4 py-2 rounded-tr-md">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (empty($orders)): ?>
+            <!-- Brand Selection Form -->
+            <div class="form-container card mb-6">
+                <h2 class="text-2xl font-medium text-[#2c3e50] mb-4">Select a Car Brand</h2>
+                <form method="get" class="flex flex-col sm:flex-row gap-4">
+                    <select name="brand" id="brand" class="px-3 py-2 rounded-md bg-[#f9f9f9] text-[#2c3e50] border border-[#ecf0f1] focus:outline-none focus:ring-2 focus:ring-[#3498db] sm:w-64" required>
+                        <option value="" disabled <?php echo !$brand ? 'selected' : ''; ?>>Choose a brand</option>
+                        <?php foreach ($valid_brands as $valid_brand): ?>
+                            <option value="<?php echo htmlspecialchars($valid_brand); ?>" <?php echo strtolower($brand) === $valid_brand ? 'selected' : ''; ?>>
+                                <?php echo ucfirst(htmlspecialchars($valid_brand)); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <button type="submit" class="px-4 py-2 bg-[#3498db] text-white rounded-md hover:bg-[#2980b9] transition">Show Models</button>
+                </form>
+            </div>
+            <!-- Car Selection Form -->
+            <div class="form-container card">
+                <h2 class="text-2xl font-medium text-[#2c3e50] mb-4">Available Car Models</h2>
+                <?php if ($brand && !empty($cars)): ?>
+                    <div class="overflow-x-auto">
+                        <table class="table w-full">
+                            <thead>
                                 <tr>
-                                    <td colspan="4" class="px-4 py-2 text-center">No orders found.</td>
+                                    <th class="px-4 py-2 rounded-tl-md">Model</th>
+                                    <th class="px-4 py-2">Price (ZMK)</th>
+                                    <th class="px-4 py-2">Stock Quantity</th>
+                                    <th class="px-4 py-2 rounded-tr-md">Action</th>
                                 </tr>
-                            <?php else: ?>
-                                <?php foreach ($orders as $order): ?>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($cars as $car): ?>
                                     <tr>
-                                        <td class="px-4 py-2"><?php echo $order['id']; ?></td>
-                                        <td class="px-4 py-2"><?php echo number_format($order['total'], 2); ?></td>
-                                        <td class="px-4 py-2"><?php echo date('Y-m-d H:i:s', strtotime($order['sale_date'])); ?></td>
-                                        <td class="px-4 py-2 status-<?php echo $order['status']; ?>">
-                                            <?php echo ucfirst($order['status']); ?>
+                                        <td class="px-4 py-2"><?php echo htmlspecialchars($car['model']); ?></td>
+                                        <td class="px-4 py-2"><?php echo number_format($car['price'], 2); ?></td>
+                                        <td class="px-4 py-2"><?php echo $car['stock_quantity']; ?></td>
+                                        <td class="px-4 py-2">
+                                            <form method="post" class="purchase-form" data-car-id="<?php echo $car['id']; ?>">
+                                                <input type="hidden" name="car_id" value="<?php echo $car['id']; ?>">
+                                                <button type="submit" name="purchase" class="px-4 py-2 text-white rounded-md bg-[#2ecc71] hover:bg-[#27ae60] action-btn transition">
+                                                    Purchase
+                                                </button>
+                                            </form>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php elseif ($brand): ?>
+                    <p class="text-[#b71c1c]">No cars available for <?php echo ucfirst(htmlspecialchars($brand)); ?>.</p>
+                    <a href="stock-form.php" class="inline-block mt-4 px-4 py-2 bg-[#3498db] text-white rounded-md hover:bg-[#2980b9] transition">Select Another Brand</a>
+                <?php else: ?>
+                    <p class="text-[#2c3e50]">Please select a brand to view available cars.</p>
+                <?php endif; ?>
             </div>
         </section>
     </main>
@@ -433,13 +464,43 @@ foreach ($orders as $order) {
             }
         }
         updateCopyright();
-        // Toggle Notification Panel
-        function toggleNotifications() {
-            const panel = document.getElementById('notification-panel');
-            panel.classList.toggle('active');
-        }
+        // Handle Purchase Form Submission
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.purchase-form').forEach(form => {
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(form);
+                    try {
+                        const response = await fetch('', {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                        const result = await response.json();
+                        if (result.success) {
+                            const button = form.querySelector('button');
+                            button.textContent = 'Purchased';
+                            button.classList.remove('bg-[#2ecc71]', 'hover:bg-[#27ae60]', 'action-btn');
+                            button.classList.add('bg-[#7f8c8d]', 'cursor-not-allowed');
+                            button.disabled = true;
+                            alert(result.message);
+                            location.reload();
+                        } else {
+                            alert(result.message);
+                        }
+                    } catch (error) {
+                        console.error('Fetch error:', error);
+                        alert('Error: ' + error.message);
+                    }
+                });
+            });
+        });
     </script>
 <?php
 // Close connection
 unset($conn);
 ?>
+</body>
+</html>

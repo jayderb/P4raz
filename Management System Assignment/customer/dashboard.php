@@ -2,9 +2,17 @@
 // Start the session
 session_start();
 
-// Check if the user is logged in and has the admin role
-if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || $_SESSION["role"] !== "manager") {
-    header("location: ../RetailSystem-LocalGarage-Login.php");
+// Debug session
+error_log("Session in dashboard.php: loggedin=" . (isset($_SESSION["loggedin"]) ? $_SESSION["loggedin"] : "unset") . 
+          ", role=" . (isset($_SESSION["role"]) ? $_SESSION["role"] : "unset") . 
+          ", user_id=" . (isset($_SESSION["user_id"]) ? $_SESSION["user_id"] : "unset"));
+
+// Check if the user is logged in as a customer
+if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || $_SESSION["role"] !== "customer" || !isset($_SESSION["user_id"])) {
+    error_log("Redirecting to login: loggedin=" . (isset($_SESSION["loggedin"]) ? $_SESSION["loggedin"] : "unset") . 
+              ", role=" . (isset($_SESSION["role"]) ? $_SESSION["role"] : "unset") . 
+              ", user_id=" . (isset($_SESSION["user_id"]) ? $_SESSION["user_id"] : "unset"));
+    header("location: ../RetailSystem-Customer-Login.php");
     exit;
 }
 
@@ -12,90 +20,175 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || $_SESSION
 try {
     require_once "../config.php";
 } catch (PDOException $e) {
+    error_log("Config error: " . $e->getMessage());
     die("Connection failed: " . $e->getMessage());
 }
 
-// Fetch employee data
-$sql = "SELECT id, first_name, last_name, role, last_login, phone FROM users WHERE role = 'sales'";
+// Initialize cart if not already set
+if (!isset($_SESSION['cart'])) {
+    $_SESSION['cart'] = [];
+}
+
+// Initialize variables for messages
+$review_success_msg = '';
+$review_error_msg = '';
+$success_msg = '';
+$error = '';
+
+// Handle review form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_review'])) {
+    $rating = intval($_POST['rating']);
+    $comment = trim($_POST['comment']);
+    $customer_id = $_SESSION['user_id'];
+
+    // Validate input
+    if ($rating < 1 || $rating > 5) {
+        $review_error_msg = "Please select a valid rating (1-5 stars).";
+    } elseif (empty($comment)) {
+        $review_error_msg = "Please provide a comment for your review.";
+    } else {
+        try {
+            $sql = "INSERT INTO reviews (customer_id, rating, comment) VALUES (:customer_id, :rating, :comment)";
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(":customer_id", $customer_id, PDO::PARAM_INT);
+            $stmt->bindParam(":rating", $rating, PDO::PARAM_INT);
+            $stmt->bindParam(":comment", $comment, PDO::PARAM_STR);
+            $stmt->execute();
+            $review_success_msg = "Review submitted successfully!";
+        } catch (PDOException $e) {
+            $review_error_msg = "Error submitting review: " . $e->getMessage();
+        }
+    }
+}
+
+// Fetch products from the database
+$sql = "SELECT id, name, price, stock FROM products WHERE stock > 0";
 $stmt = $conn->prepare($sql);
 $stmt->execute();
-$employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Fetch total sales
-$sql = "SELECT COALESCE(SUM(total), 0) as total_sales FROM sales";
+// Process adding items to the cart
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_to_cart'])) {
+    $product_id = (int)$_POST['product_id'];
+    $quantity = (int)$_POST['quantity'];
+
+    // Validate product ID and quantity
+    $product_exists = false;
+    foreach ($products as $product) {
+        if ($product['id'] == $product_id && $product['stock'] >= $quantity && $quantity > 0) {
+            $product_exists = true;
+            break;
+        }
+    }
+
+    if ($product_exists) {
+        if (isset($_SESSION['cart'][$product_id])) {
+            $_SESSION['cart'][$product_id]['quantity'] += $quantity;
+        } else {
+            $_SESSION['cart'][$product_id] = [
+                'quantity' => $quantity,
+                'name' => $product['name'],
+                'price' => $product['price']
+            ];
+        }
+    } else {
+        $error = "Invalid product or insufficient stock.";
+    }
+}
+
+// Process checkout
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['checkout'])) {
+    if (!empty($_SESSION['cart'])) {
+        $customer_email = filter_var($_POST['customer_email'], FILTER_VALIDATE_EMAIL);
+        $customer_phone = trim($_POST['customer_phone']);
+
+        if (!$customer_email) {
+            $error = "Invalid email address.";
+        } elseif (empty($customer_phone) || !preg_match("/^[0-9]{10,15}$/", $customer_phone)) {
+            $error = "Invalid phone number. Must be 10-15 digits.";
+        } else {
+            try {
+                $conn->beginTransaction();
+
+                $customer_id = $_SESSION['user_id'];
+
+                $total = 0;
+                foreach ($_SESSION['cart'] as $product_id => $item) {
+                    $total += $item['price'] * $item['quantity'];
+                }
+
+                $sql = "INSERT INTO sales (customer_id, total, sale_date, status) VALUES (:customer_id, :total, NOW(), 'pending')";
+                $stmt = $conn->prepare($sql);
+                $stmt->bindParam(":customer_id", $customer_id, PDO::PARAM_INT);
+                $stmt->bindParam(":total", $total, PDO::PARAM_STR);
+                $stmt->execute();
+                $sale_id = $conn->lastInsertId();
+
+                foreach ($_SESSION['cart'] as $product_id => $item) {
+                    $sql = "INSERT INTO sales_items (sale_id, product_id, quantity, price) 
+                            VALUES (:sale_id, :product_id, :quantity, :price)";
+                    $stmt = $conn->prepare($sql);
+                    $stmt->bindParam(":sale_id", $sale_id, PDO::PARAM_INT);
+                    $stmt->bindParam(":product_id", $product_id, PDO::PARAM_INT);
+                    $stmt->bindParam(":quantity", $item['quantity'], PDO::PARAM_INT);
+                    $stmt->bindParam(":price", $item['price'], PDO::PARAM_STR);
+                    $stmt->execute();
+
+                    $sql = "UPDATE products SET stock = stock - :quantity WHERE id = :product_id";
+                    $stmt = $conn->prepare($sql);
+                    $stmt->bindParam(":quantity", $item['quantity'], PDO::PARAM_INT);
+                    $stmt->bindParam(":product_id", $product_id, PDO::PARAM_INT);
+                    $stmt->execute();
+                }
+
+                $conn->commit();
+                $_SESSION['cart'] = [];
+                $success_msg = "Purchase completed successfully! Awaiting approval.";
+            } catch (Exception $e) {
+                $conn->rollBack();
+                $error = "Failed to process purchase: " . $e->getMessage();
+            }
+        }
+    } else {
+        $error = "Cart is empty.";
+    }
+}
+
+// Fetch customer profile data for overview
+$sql = "SELECT first_name, last_name, email, phone, created_at FROM users WHERE id = :id AND role = 'customer'";
 $stmt = $conn->prepare($sql);
+$stmt->bindParam(":id", $_SESSION['user_id'], PDO::PARAM_INT);
 $stmt->execute();
-$total_revenue = $stmt->fetchColumn();
+$profile = $stmt->fetch();
 
-// Fetch today's income
-$sql = "SELECT COALESCE(SUM(total), 0) as today_income 
+// Fetch recent orders for overview
+$sql = "SELECT id, total, sale_date 
         FROM sales 
-        WHERE DATE(sale_date) = CURDATE()";
-$stmt = $conn->prepare($sql);
-$stmt->execute();
-$today_income = $stmt->fetchColumn();
-
-// Fetch today's sales by product for chart
-$sql = "SELECT p.name, COALESCE(SUM(si.quantity * si.price), 0) as total_sales
-        FROM sales s
-        JOIN sales_items si ON s.id = si.sale_id
-        JOIN products p ON si.product_id = p.id
-        WHERE DATE(s.sale_date) = CURDATE()
-        GROUP BY p.id, p.name
-        ORDER BY total_sales DESC
-        LIMIT 5";
-$stmt = $conn->prepare($sql);
-$stmt->execute();
-$todays_sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
-$todays_sales_labels = array_column($todays_sales, 'name');
-$todays_sales_values = array_column($todays_sales, 'total_sales');
-
-// Fetch new orders (sales today)
-$sql = "SELECT COUNT(*) as new_orders 
-        FROM sales 
-        WHERE DATE(sale_date) = CURDATE()";
-$stmt = $conn->prepare($sql);
-$stmt->execute();
-$new_orders = $stmt->fetchColumn();
-
-// Fetch new users (customers added today)
-$sql = "SELECT COUNT(*) as new_users 
-        FROM users 
-        WHERE role = 'customer' AND DATE(created_at) = CURDATE()";
-$stmt = $conn->prepare($sql);
-$stmt->execute();
-$new_users = $stmt->fetchColumn();
-
-// Fetch sales history (last 7 days)
-$sql = "SELECT DATE(sale_date) as sale_date, COALESCE(SUM(total), 0) as daily_total 
-        FROM sales 
-        GROUP BY DATE(sale_date) 
+        WHERE customer_id = :customer_id 
         ORDER BY sale_date DESC 
-        LIMIT 7";
+        LIMIT 1";
 $stmt = $conn->prepare($sql);
+$stmt->bindParam(":customer_id", $_SESSION['user_id'], PDO::PARAM_INT);
 $stmt->execute();
-$sales_history = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$last_order = $stmt->fetch();
 
-// Prepare data for charts
-$dates = array_map(function($date) {
-    return date('M d', strtotime($date));
-}, array_column($sales_history, 'sale_date'));
-$sales_values = array_column($sales_history, 'daily_total');
-
-// User statistics (new customers over last 7 days)
-$sql = "SELECT DATE(created_at) as reg_date, COUNT(*) as user_count 
-        FROM users 
-        WHERE role = 'customer' 
-        GROUP BY DATE(created_at) 
-        ORDER BY reg_date DESC 
-        LIMIT 7";
+// Fetch order count
+$sql = "SELECT COUNT(*) as order_count 
+        FROM sales 
+        WHERE customer_id = :customer_id";
 $stmt = $conn->prepare($sql);
+$stmt->bindParam(":customer_id", $_SESSION['user_id'], PDO::PARAM_INT);
 $stmt->execute();
-$user_stats = $stmt->fetchAll(PDO::FETCH_ASSOC);
-$user_stats_dates = array_map(function($date) {
-    return date('M d', strtotime($date));
-}, array_column($user_stats, 'reg_date'));
-$user_stats_values = array_column($user_stats, 'user_count');
+$order_count = $stmt->fetchColumn();
+
+// Fetch total spent
+$sql = "SELECT COALESCE(SUM(total), 0) as total_spent 
+        FROM sales 
+        WHERE customer_id = :customer_id";
+$stmt = $conn->prepare($sql);
+$stmt->bindParam(":customer_id", $_SESSION['user_id'], PDO::PARAM_INT);
+$stmt->execute();
+$total_spent = $stmt->fetchColumn();
 ?>
 
 <!DOCTYPE html>
@@ -103,512 +196,434 @@ $user_stats_values = array_column($user_stats, 'user_count');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - ZedAuto</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Customer Dashboard - ZedAuto</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/ico" href="../favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../Static/images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../Static/images/favicon-16x16.png">
+    <link rel="manifest" href="../site.webmanifest">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .sidebar {
-            width: 250px;
-            height: 100vh;
-            position: fixed;
-            background-color: #2c3e50;
-            padding-top: 20px;
-            color: white;
-            transition: transform 0.3s ease;
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #ecf0f1;
+            color: #2c3e50;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-        .sidebar h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 18px;
+        .navbar {
+            background: #2c2f33;
+            transition: background 0.3s ease;
         }
-        .sidebar a {
-            display: block;
-            padding: 12px 20px;
-            color: white;
+        .navbar.sticky {
+            background: #23272a;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .topbar {
+            background: #2c2f33;
+            color: #ffffff;
+            padding: 0.75rem 0;
+            z-index: 900;
+        }
+        .topbar .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .topbar nav {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+        }
+        .topbar a {
+            color: #ffffff;
             text-decoration: none;
-            font-size: 16px;
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+            transition: background 0.2s ease;
         }
-        .sidebar a:hover {
-            background-color: #34495e;
+        .topbar a:hover {
+            background: #34495e;
+            border-radius: 4px;
         }
         .content {
-            margin-left: 250px;
-            padding: 20px;
-            transition: margin-left 0.3s ease;
+            padding: 2rem;
+            flex: 1;
         }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
+        .table-container {
+            background: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
         }
-        .header h1 {
-            font-size: 24px;
-            color: #2c3e50;
+        .table th {
+            background: #2c3e50;
+            color: #ffffff;
         }
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 20px;
+        .table tr:hover {
+            background: #ecf0f1;
         }
-        .header .user-info {
-            display: flex;
-            align-items: center;
+        .card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        .header .user-info img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-        .header .user-info span {
-            font-size: 16px;
-            color: #7f8c8d;
-        }
-        .header .buttons button {
-            padding: 8px 16px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-left: 10px;
-        }
-        .header .buttons button:hover {
-            background-color: #2980b9;
-        }
-        .metrics {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
         }
         .metric-card {
             background: linear-gradient(135deg, #ffffff 0%, #f9f9f9 100%);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
             border: 1px solid #ecf0f1;
-            text-align: center;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        .metric-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 25px rgba(0,0,0,0.2);
+        .message {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
         }
-        .metric-card h3 {
-            font-size: 18px;
-            color: #2c3e50;
-            margin-bottom: 15px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
+        .message.success {
+            background: #e0f7fa;
+            color: #006064;
         }
-        .metric-card p {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2c3e50;
-            margin: 0 0 10px;
+        .message.error {
+            background: #ffebee;
+            color: #b71c1c;
         }
-        .metric-card canvas {
-            max-width: 100%;
-            height: 150px !important;
-            border-radius: 8px;
-            margin: 10px auto;
-        }
-        .change {
-            font-size: 14px;
-            color: #7f8c8d;
-            display: block;
-            margin-top: 10px;
-        }
-        .charts {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-top: 20px;
-        }
-        .chart-container {
-            background: linear-gradient(135deg, #ffffff 0%, #f9f9f9 100%);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            border: 1px solid #ecf0f1;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .chart-container:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 25px rgba(0,0,0,0.2);
-        }
-        .chart-container h3 {
-            font-size: 20px;
-            color: #2c3e50;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-        .chart-container canvas {
-            max-width: 100%;
-            height: 300px !important;
-            border-radius: 8px;
-        }
-        #toggleBtn {
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 5px;
-            cursor: pointer;
+        .rating-stars input {
             display: none;
-            z-index: 1000;
+        }
+        .rating-stars label {
+            font-size: 1.5rem;
+            color: #d3d3d3;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        .rating-stars input:checked ~ label,
+        .rating-stars label:hover,
+        .rating-stars label:hover ~ label {
+            color: #f1c40f;
+        }
+        #topbar-mobile {
+            display: none;
+            background: #2c2f33;
+        }
+        #topbar-toggle {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: #2c2f33;
+            color: #ffffff;
+            padding: 0.5rem;
+            border-radius: 4px;
         }
         @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-250px);
+            .topbar nav {
+                display: none;
             }
-            .sidebar.active {
-                transform: translateX(0);
+            #topbar-mobile {
+                display: none;
             }
-            .content {
-                margin-left: 0;
-            }
-            #toggleBtn {
+            #topbar-mobile.active {
                 display: block;
             }
+            #topbar-toggle {
+                display: block;
+            }
+            .content {
+                padding: 1rem;
+            }
             .metrics {
-                gap: 15px;
-            }
-            .metric-card {
-                padding: 15px;
-            }
-            .metric-card canvas {
-                height: 120px !important;
-            }
-            .charts {
                 grid-template-columns: 1fr;
-                gap: 20px;
-            }
-            .chart-container {
-                padding: 15px;
-            }
-            .chart-container canvas {
-                height: 250px !important;
-            }
-        }
-        @media (max-width: 576px) {
-            .metric-card h3 {
-                font-size: 16px;
-            }
-            .metric-card p {
-                font-size: 20px;
-            }
-            .metric-card canvas {
-                height: 100px !important;
-            }
-            .chart-container h3 {
-                font-size: 18px;
-            }
-            .chart-container canvas {
-                height: 200px !important;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Sidebar -->
-    <div id="sidebar" class="sidebar">
-        <h2>ZedAuto Admin</h2>
-        <a href="dashboard.php">Dashboard</a>
-        <a href="manage_users.php">Users</a>
-        <a href="customs.php">Customs</a>
-        <a href="orders.php">Orders</a>
-        <a href="inventory.php">Inventory</a>
-        <a href="../logout.php">Logout</a>
-    </div>
-
-    <!-- Toggle Button for Mobile -->
-    <button id="toggleBtn">☰</button>
-
+    <!-- Navbar -->
+    <header class="navbar sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="../RetailSytsem-Home.html" class="text-2xl font-bold text-white">ZedAuto</a>
+            <button id="hamburger" class="md:hidden text-white text-2xl focus:outline-none" aria-label="Toggle menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <nav id="nav-menu" class="hidden md:flex items-center space-x-6">
+                <a href="../RetailSytsem-Home.html" class="text-white hover:text-[#f1c40f] transition">Home</a>
+                <a href="#" class="text-white hover:text-[#f1c40f] transition">Reviews</a>
+                <div class="flex items-center">
+                    <input type="text" class="px-3 py-2 rounded-l-md bg-[#40444b] text-white placeholder-gray-300 focus:outline-none" placeholder="Search...">
+                    <button class="px-4 py-2 bg-[#ffcc00] text-[#2c3e50] rounded-r-md hover:bg-[#e6b800] transition">Search</button>
+                </div>
+                <a href="../logout.php" class="text-red-400 hover:text-red-500 transition">Logout</a>
+            </nav>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-[#2c2f33]">
+            <div class="container mx-auto px-4 py-4 flex flex-col space-y-4">
+                <a href="../RetailSytsem-Home.html" class="text-white hover:text-[#f1c40f] transition">Home</a>
+                <a href="#" class="text-white hover:text-[#f1c40f] transition">Reviews</a>
+                <div class="flex">
+                    <input type="text" class="px-3 py-2 rounded-l-md bg-[#40444b] text-white placeholder-gray-300 focus:outline-none w-full" placeholder="Search...">
+                    <button class="px-4 py-2 bg-[#ffcc00] text-[#2c3e50] rounded-r-md hover:bg-[#e6b800] transition">Search</button>
+                </div>
+                <a href="../logout.php" class="text-red-400 hover:text-red-500 transition">Logout</a>
+            </div>
+        </div>
+        <!-- Top Bar -->
+        <nav id="topbar" class="topbar">
+            <div class="container mx-auto px-4">
+                <h2 class="sr-only">Customer Navigation</h2>
+                <nav>
+                    <a href="../RetailSytsem-Home.html">Home</a>
+                    <a href="stock-form.php">Browse Cars</a>
+                    <a href="orders.php">My Orders</a>
+                </nav>
+            </div>
+        </nav>
+        <!-- Mobile Top Bar Menu -->
+        <div id="topbar-mobile" class="md:hidden">
+            <div class="container mx-auto px-4 py-4 flex flex-col space-y-2">
+                <a href="../RetailSytsem-Home.html" class="text-white hover:text-[#f1c40f] transition px-4 py-2">Home</a>
+                <a href="stock-form.php" class="text-white hover:text-[#f1c40f] transition px-4 py-2">Browse Cars</a>
+                <a href="orders.php" class="text-white hover:text-[#f1c40f] transition px-4 py-2">My Orders</a>
+            </div>
+        </div>
+    </header>
+    <!-- Toggle Button for Mobile Top Bar -->
+    <button id="topbar-toggle" class="md:hidden" aria-label="Toggle top bar menu">☰</button>
     <!-- Main Content -->
-    <div id="content" class="content">
-        <div class="header">
-            <h1>Dashboard</h1>
-            <div class="header-right">
-                <div class="user-info">
-                    <img src="../images/avatar.jpg" alt="User">
-                    <span>Hi, <?php echo htmlspecialchars($_SESSION["first_name"]); ?>!</span>
+    <main class="content">
+        <section class="container mx-auto px-4">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl md:text-4xl font-semibold text-[#2c3e50]">
+                    Customer Dashboard
+                </h1>
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center">
+                        <img src="https://via.placeholder.com/40" alt="User" class="w-10 h-10 rounded-full mr-2">
+                        <span class="text-[#7f8c8d] text-lg">Hi, <?php echo htmlspecialchars($_SESSION["first_name"]); ?>!</span>
+                    </div>
                 </div>
-                <div class="buttons">
-                    <button onclick="location.href='manage_users.php'">Manage</button>
+            </div>
+            <!-- Metrics -->
+            <div class="metrics grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="metric-card card p-6 text-center">
+                    <h3 class="text-lg font-semibold text-[#2c3e50] mb-2">Total Orders</h3>
+                    <p class="text-2xl font-bold text-[#2c3e50]"><?php echo $order_count; ?></p>
+                    <span class="text-sm text-[#7f8c8d]">Your total purchases</span>
                 </div>
+                <div class="metric-card card p-6 text-center">
+                    <h3 class="text-lg font-semibold text-[#2c3e50] mb-2">Total Spent</h3>
+                    <p class="text-2xl font-bold text-[#2c3e50]">ZMK<?php echo number_format($total_spent, 2); ?></p>
+                    <span class="text-sm text-[#7f8c8d]">Lifetime spending</span>
+                </div>
+                <div class="metric-card card p-6 text-center">
+                    <h3 class="text-lg font-semibold text-[#2c3e50] mb-2">Last Order</h3>
+                    <p class="text-2xl font-bold text-[#2c3e50]"><?php echo $last_order ? date('M d, Y', strtotime($last_order['sale_date'])) : 'None'; ?></p>
+                    <span class="text-sm text-[#7f8c8d]">Most recent order</span>
+                </div>
+            </div>
+            <!-- Purchase Section -->
+            <div class="table-container card mb-8">
+                <h2 class="text-2xl font-medium text-[#2c3e50] mb-4">Make a Purchase</h2>
+                <?php if (!empty($success_msg)): ?>
+                    <div class="message success"><?php echo $success_msg; ?></div>
+                <?php endif; ?>
+                <?php if (!empty($error)): ?>
+                    <div class="message error"><?php echo $error; ?></div>
+                <?php endif; ?>
+                <!-- Product List -->
+                <h3 class="text-lg font-semibold text-[#2c3e50] mb-4">Available Products</h3>
+                <div class="overflow-x-auto">
+                    <table class="table w-full">
+                        <thead>
+                            <tr>
+                                <th class="px-4 py-2 rounded-tl-md">Product Name</th>
+                                <th class="px-4 py-2">Price (ZMK)</th>
+                                <th class="px-4 py-2">Stock</th>
+                                <th class="px-4 py-2 rounded-tr-md">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($products)): ?>
+                                <tr><td colspan="4" class="text-center py-4 text-[#2c3e50]">No products available.</td></tr>
+                            <?php else: ?>
+                                <?php foreach ($products as $product): ?>
+                                    <tr>
+                                        <td class="px-4 py-2"><?php echo htmlspecialchars($product['name']); ?></td>
+                                        <td class="px-4 py-2"><?php echo number_format($product['price'], 2); ?></td>
+                                        <td class="px-4 py-2"><?php echo $product['stock']; ?></td>
+                                        <td class="px-4 py-2">
+                                            <form method="post" class="flex items-center gap-2">
+                                                <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
+                                                <input type="number" name="quantity" min="1" max="<?php echo $product['stock']; ?>" value="1" class="px-2 py-1 rounded-md bg-[#f9f9f9] text-[#2c3e50] border border-[#ecf0f1] w-16 focus:outline-none focus:ring-2 focus:ring-[#3498db]">
+                                                <button type="submit" name="add_to_cart" class="px-4 py-2 bg-[#3498db] text-white rounded-md hover:bg-[#2980b9] transition">Add to Cart</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Cart -->
+                <h3 class="text-lg font-semibold text-[#2c3e50] mt-6 mb-4">Your Cart</h3>
+                <?php if (empty($_SESSION['cart'])): ?>
+                    <p class="text-[#2c3e50] text-center">Your cart is empty.</p>
+                <?php else: ?>
+                    <div class="overflow-x-auto">
+                        <table class="table w-full mb-4">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-2 rounded-tl-md">Product Name</th>
+                                    <th class="px-4 py-2">Price (ZMK)</th>
+                                    <th class="px-4 py-2">Quantity</th>
+                                    <th class="px-4 py-2 rounded-tr-md">Subtotal (ZMK)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php 
+                                $cart_total = 0;
+                                foreach ($_SESSION['cart'] as $product_id => $item): 
+                                    $subtotal = $item['price'] * $item['quantity'];
+                                    $cart_total += $subtotal;
+                                ?>
+                                    <tr>
+                                        <td class="px-4 py-2"><?php echo htmlspecialchars($item['name']); ?></td>
+                                        <td class="px-4 py-2"><?php echo number_format($item['price'], 2); ?></td>
+                                        <td class="px-4 py-2"><?php echo $item['quantity']; ?></td>
+                                        <td class="px-4 py-2"><?php echo number_format($subtotal, 2); ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-[#2c3e50] font-bold mb-4">Total: ZMK<?php echo number_format($cart_total, 2); ?></p>
+                    <form method="post">
+                        <div class="mb-4">
+                            <label for="customer_email" class="block text-[#2c3e50] mb-1">Confirm Email:</label>
+                            <input type="email" name="customer_email" id="customer_email" value="<?php echo htmlspecialchars($_SESSION['email'] ?? ''); ?>" required class="w-full px-3 py-2 rounded-md bg-[#f9f9f9] text-[#2c3e50] border border-[#ecf0f1] focus:outline-none focus:ring-2 focus:ring-[#3498db]">
+                            <label for="customer_phone" class="block text-[#2c3e50] mb-1 mt-2">Confirm Phone Number:</label>
+                            <input type="text" name="customer_phone" id="customer_phone" value="<?php echo htmlspecialchars($_SESSION['phone'] ?? ''); ?>" required pattern="[0-9]{10,15}" title="Please enter a phone number with 10 to 15 digits" class="w-full px-3 py-2 rounded-md bg-[#f9f9f9] text-[#2c3e50] border border-[#ecf0f1] focus:outline-none focus:ring-2 focus:ring-[#3498db]">
+                        </div>
+                        <button type="submit" name="checkout" class="px-4 py-2 bg-[#2ecc71] text-white rounded-md hover:bg-[#27ae60] transition">Checkout</button>
+                    </form>
+                <?php endif; ?>
+            </div>
+            <!-- Review Submission Form -->
+            <div class="table-container card">
+                <h2 class="text-2xl font-medium text-[#2c3e50] mb-4">Submit a Review for ZedAuto</h2>
+                <?php if (!empty($review_success_msg)): ?>
+                    <div class="message success"><?php echo $review_success_msg; ?></div>
+                <?php endif; ?>
+                <?php if (!empty($review_error_msg)): ?>
+                    <div class="message error"><?php echo $review_error_msg; ?></div>
+                <?php endif; ?>
+                <form method="post" class="flex flex-col gap-4">
+                    <div class="rating-stars flex justify-center gap-2">
+                        <input type="radio" name="rating" id="star5" value="5" required>
+                        <label for="star5"><i class="fas fa-star"></i></label>
+                        <input type="radio" name="rating" id="star4" value="4">
+                        <label for="star4"><i class="fas fa-star"></i></label>
+                        <input type="radio" name="rating" id="star3" value="3">
+                        <label for="star3"><i class="fas fa-star"></i></label>
+                        <input type="radio" name="rating" id="star2" value="2">
+                        <label for="star2"><i class="fas fa-star"></i></label>
+                        <input type="radio" name="rating" id="star1" value="1">
+                        <label for="star1"><i class="fas fa-star"></i></label>
+                    </div>
+                    <textarea name="comment" rows="4" placeholder="Write your review here..." class="px-3 py-2 rounded-md bg-[#f9f9f9] text-[#2c3e50] border border-[#ecf0f1] focus:outline-none focus:ring-2 focus:ring-[#3498db] w-full" required></textarea>
+                    <button type="submit" name="submit_review" class="px-4 py-2 bg-[#3498db] text-white rounded-md hover:bg-[#2980b9] transition">Submit Review</button>
+                </form>
+            </div>
+        </section>
+    </main>
+    <!-- Footer -->
+    <footer class="bg-[#2c3e50] text-[#ecf0f1] py-10">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">ZedAuto</h3>
+                    <p class="text-[#7f8c8d]">Providing top-notch automotive services in Lusaka, Zambia.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="../RetailSytsem-Home.html" class="hover:text-[#f1c40f] transition">Home</a></li>
+                        <li><a href="../about.php" class="hover:text-[#f1c40f] transition">About Us</a></li>
+                        <li><a href="#" class="hover:text-[#f1c40f] transition">Services</a></li>
+                        <li><a href="../contact.php" class="hover:text-[#f1c40f] transition">Contact</a></li>
+                        <li><a href="#" class="hover:text-[#f1c40f] transition">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">Connect With Us</h3>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-2xl hover:text-[#f1c40f] transition"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-2xl hover:text-[#f1c40f] transition"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-2xl hover:text-[#f1c40f] transition"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-8 text-[#7f8c8d]">
+                <span id="copyright">© 2025 ZedAuto. All rights reserved.</span>
             </div>
         </div>
-
-        <!-- Metrics -->
-        <div class="metrics">
-            <div class="metric-card metric-income">
-                <h3>Today's Income</h3>
-                <p>ZMK<?php echo number_format($today_income, 2); ?></p>
-                <canvas id="todaySalesChart"></canvas>
-                <span class="change">Change <span style="color: #2ecc71;">+75%</span></span>
-            </div>
-            <div class="metric-card metric-revenue">
-                <h3>Total Revenue</h3>
-                <p>ZMK<?php echo number_format($total_revenue, 2); ?></p>
-                <div class="progress">
-                    <div class="progress-bar" style="width: <?php echo min(($total_revenue / 10000) * 100, 100); ?>%;"></div>
-                </div>
-                <span class="change">Change <span style="color: #2ecc71;">+40%</span></span>
-            </div>
-            <div class="metric-card metric-orders">
-                <h3>New Orders</h3>
-                <p><?php echo $new_orders; ?></p>
-                <div class="progress">
-                    <div class="progress-bar" style="width: <?php echo min($new_orders * 5, 100); ?>%;"></div>
-                </div>
-                <span class="change">Change <span style="color: #e74c3c;">-50%</span></span>
-            </div>
-            <div class="metric-card metric-users">
-                <h3>New Users</h3>
-                <p><?php echo $new_users; ?></p>
-                <div class="progress">
-                    <div class="progress-bar" style="width: <?php echo min($new_users * 10, 100); ?>%;"></div>
-                </div>
-                <span class="change">Change <span style="color: #2ecc71;">+20%</span></span>
-            </div>
-        </div>
-
-        <!-- Charts -->
-        <div class="charts">
-            <div class="chart-container">
-                <h3>Sales History (Last 7 Days)</h3>
-                <canvas id="salesChart"></canvas>
-            </div>
-            <div class="chart-container">
-                <h3>New Users (Last 7 Days)</h3>
-                <canvas id="usersChart"></canvas>
-            </div>
-        </div>
-    </div>
-
+    </footer>
+    <!-- JavaScript -->
     <script>
-        // Sidebar toggle for mobile
-        const toggleBtn = document.getElementById('toggleBtn');
-        const sidebar = document.getElementById('sidebar');
-        const content = document.getElementById('content');
-
-        toggleBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
+        // Navbar Hamburger Menu Toggle
+        const hamburger = document.getElementById('hamburger');
+        const mobileMenu = document.getElementById('mobile-menu');
+        hamburger.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
         });
-
-        // Today's Sales Chart
-        const todaySalesChart = document.getElementById('todaySalesChart').getContext('2d');
-        new Chart(todaySalesChart, {
-            type: 'bar',
-            data: {
-                labels: <?php echo json_encode($todays_sales_labels); ?>,
-                datasets: [{
-                    label: 'Sales by Product (ZMK)',
-                    data: <?php echo json_encode($todays_sales_values); ?>,
-                    backgroundColor: 'rgba(46, 204, 113, 0.7)',
-                    borderColor: '#2ecc71',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: {
-                    duration: 800,
-                    easing: 'easeOutQuart'
-                },
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Product',
-                            color: '#2c3e50',
-                            font: { size: 12, weight: '600' }
-                        },
-                        grid: { display: false },
-                        ticks: {
-                            color: '#7f8c8d',
-                            font: { size: 10 },
-                            maxRotation: 45,
-                            minRotation: 45
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Sales (ZMK)',
-                            color: '#2c3e50',
-                            font: { size: 12, weight: '600' }
-                        },
-                        grid: {
-                            color: '#ecf0f1',
-                            borderDash: [5, 5]
-                        },
-                        ticks: {
-                            color: '#7f8c8d',
-                            font: { size: 10 },
-                            callback: function(value) {
-                                return 'ZMK' + value.toLocaleString();
-                            }
-                        },
-                        beginAtZero: true
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        backgroundColor: '#2c3e50',
-                        titleColor: '#fff',
-                        bodyColor: '#fff',
-                        borderColor: '#3498db',
-                        borderWidth: 1,
-                        padding: 8,
-                        cornerRadius: 6,
-                        callbacks: {
-                            label: function(context) {
-                                return 'ZMK' + context.parsed.y.toLocaleString();
-                            }
-                        }
-                    }
-                },
-                interaction: {
-                    mode: 'nearest',
-                    intersect: false
-                },
-                hover: {
-                    mode: 'nearest',
-                    intersect: false
-                }
+        // Close navbar mobile menu when a link is clicked
+        const mobileLinks = mobileMenu.querySelectorAll('a');
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+            });
+        });
+        // Top Bar Toggle
+        const topbarToggle = document.getElementById('topbar-toggle');
+        const topbarMobile = document.getElementById('topbar-mobile');
+        topbarToggle.addEventListener('click', () => {
+            topbarMobile.classList.toggle('active');
+        });
+        // Close top bar mobile menu when a link is clicked
+        const topbarLinks = topbarMobile.queryAll('a');
+        topbarLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                topbarMobile.classList.remove('active');
+            });
+        });
+        // Sticky Navbar
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            navbar.classList.toggle('sticky', window.scrollY > 50);
+        });
+        // Update Copyright Year
+        function updateCopyright() {
+            const copyrightElement = document.getElementById('copyright');
+            const currentYear = new Date().getFullYear();
+            const baseYear = 2025;
+            if (currentYear > baseYear) {
+                copyrightElement.textContent = `© ${baseYear}-${currentYear} ZedAuto. All rights reserved.`;
             }
-        });
-
-        // Sales History Chart
-        const salesChart = document.getElementById('salesChart').getContext('2d');
-        new Chart(salesChart, {
-            type: 'line',
-            data: {
-                labels: <?php echo json_encode(array_reverse($dates)); ?>,
-                datasets: [{
-                    label: 'Daily Sales (ZMK)',
-                    data: <?php echo json_encode(array_reverse($sales_values)); ?>,
-                    backgroundColor: 'rgba(46, 204, 113, 0.3)',
-                    borderColor: '#2ecc71',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#2ecc71',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 5,
-                    pointHoverRadius: 7
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: {
-                    duration: 1000,
-                    easing: 'easeOutQuart'
-                },
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Date',
-                            color: '#2c3e50',
-                            font: { size: 16, weight: '600' }
-                        },
-                        grid: { display: false },
-                        ticks: {
-                            color: '#7f8c8d',
-                            font: { size: 12 }
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Sales (ZMK)',
-                            color: '#2c3e50',
-                            font: { size: 16, weight: '600' }
-                        },
-                        grid: {
-                            color: '#ecf0f1',
-                            borderDash: [5, 5]
-                        },
-                        ticks: {
-                            color: '#7f8c8d',
-                            font: { size: 12 },
-                            callback: function(value) {
-                                return 'ZMK' + value.toLocaleString();
-                            }
-                        },
-                        beginAtZero: true
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top',
-                        labels: {
-                            color: '#2c3e50',
-                            font: { size: 14, weight: '500' },
-                            padding: 15
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: '#2c3e50',
-                        titleColor: '#fff',
-                        bodyColor: '#fff',
-                        borderColor: '#3498db',
-                        borderWidth: 1,
-                        padding: 10,
-                        cornerRadius: 6,
-                        callbacks: {
-                            label: function(context) {
-                                return 'ZMK' + context.parsed.y.toLocaleString();
-                            }
-                        }
-                    }
-                },
-                interaction: {
-                    mode: 'nearest',
-                    intersect: false
-                },
-                hover: {
-                    mode: 'nearest',
-                    intersect: false
-                }
-            }
-        });
-
-        // Placeholder for Users Chart (unimplemented)
-        const usersChart = document.getElementById('usersChart').getContext('2d');
-        const usersData = {
-            labels: <?php echo json_encode(array_reverse($user_stats_dates)); ?>,
-            datasets: [{
-                label: 'New Users',
-                data: <?php echo json_encode(array_reverse($user_stats_values)); ?>,
-                backgroundColor: 'rgba(52, 152, 219, 0.2)',
-                borderColor: '#3498db',
-                borderWidth: 2
-            }]
-        };
-        // Note: Uncomment to enable users chart
-        // new Chart(usersChart, { type: 'line', data: usersData });
+        }
+        updateCopyright();
     </script>
-</body>
-</html>
-
 <?php
 // Close connection
 unset($conn);
 ?>
+</body>
+</html>
