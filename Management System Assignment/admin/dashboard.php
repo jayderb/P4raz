@@ -256,7 +256,7 @@ $conn->close();
         <!-- Mobile Menu -->
         <div id="mobile-menu" class="hidden md:hidden bg-[#2c2f33]">
             <div class="container mx-auto px-4 py-4 flex flex-col space-y-4">
-                <a href="#" class="text-white hover:text-[#f1c40f] transition">Reviews</a>
+                <a href="reviews.php" class="text-white hover:text-[#f1c40f] transition">Reviews</a>
                 <div class="flex">
                     <input type="text" class="px-3 py-2 rounded-l-md bg-[#40444b] text-white placeholder-gray-300 focus:outline-none w-full" placeholder="Search...">
                     <button class="px-4 py-2 bg-[#ffcc00] text-[#2c2f33] rounded-r-md hover:bg-[#e6b800] transition">Search</button>
