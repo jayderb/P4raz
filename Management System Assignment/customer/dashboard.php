@@ -350,13 +350,12 @@ $total_spent = $stmt->fetchColumn();
     <!-- Navbar -->
     <header class="navbar sticky top-0 z-50">
         <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-            <a href="../RetailSytsem-Home.html" class="text-2xl font-bold text-white">ZedAuto</a>
+            <a href="dashboard.php" class="text-2xl font-bold text-white">ZedAuto</a>
             <button id="hamburger" class="md:hidden text-white text-2xl focus:outline-none" aria-label="Toggle menu">
                 <i class="fas fa-bars"></i>
             </button>
             <nav id="nav-menu" class="hidden md:flex items-center space-x-6">
-                <a href="../RetailSytsem-Home.html" class="text-white hover:text-[#f1c40f] transition">Home</a>
-                <a href="#" class="text-white hover:text-[#f1c40f] transition">Reviews</a>
+                <a href="dashboard.php" class="text-white hover:text-[#f1c40f] transition">Home</a>
                 <div class="flex items-center">
                     <input type="text" class="px-3 py-2 rounded-l-md bg-[#40444b] text-white placeholder-gray-300 focus:outline-none" placeholder="Search...">
                     <button class="px-4 py-2 bg-[#ffcc00] text-[#2c3e50] rounded-r-md hover:bg-[#e6b800] transition">Search</button>
@@ -381,7 +380,7 @@ $total_spent = $stmt->fetchColumn();
             <div class="container mx-auto px-4">
                 <h2 class="sr-only">Customer Navigation</h2>
                 <nav>
-                    <a href="../RetailSytsem-Home.html">Home</a>
+                    <a href="dashboard.php">Home</a>
                     <a href="stock-form.php">Browse Cars</a>
                     <a href="orders.php">My Orders</a>
                 </nav>

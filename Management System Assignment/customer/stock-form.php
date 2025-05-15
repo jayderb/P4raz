@@ -1,4 +1,7 @@
 <?php
+// Start output buffering to catch stray output
+ob_start();
+
 // Start the session
 session_start();
 
@@ -13,6 +16,7 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || $_SESSION
               ", role=" . (isset($_SESSION["role"]) ? $_SESSION["role"] : "unset") . 
               ", user_id=" . (isset($_SESSION["user_id"]) ? $_SESSION["user_id"] : "unset"));
     header("location: ../RetailSystem-Customer-Login.php");
+    ob_end_flush();
     exit;
 }
 
@@ -28,10 +32,18 @@ try {
 $success_msg = '';
 $error_msg = '';
 $brand = isset($_GET['brand']) ? trim($_GET['brand']) : '';
-$valid_brands = ['toyota', 'mercedes', 'bmw', 'nissan', 'honda', 'ford', 'chevrolet'];
+$valid_brands = [
+    'toyota' => ['name' => 'Toyota', 'logo' => '../Static/images/Toyota.jpg'],
+    'mercedes' => ['name' => 'Mercedes', 'logo' => '../Static/images/mercedes-logo.png'],
+    'bmw' => ['name' => 'BMW', 'logo' => '../Static/images/bmw-logo.png'],
+    'nissan' => ['name' => 'Nissan', 'logo' => '../Static/images/nissan-logo.png'],
+    'honda' => ['name' => 'Honda', 'logo' => '../Static/images/honda-logo.png'],
+    'ford' => ['name' => 'Ford', 'logo' => '../Static/images/ford-logo.png'],
+    'chevrolet' => ['name' => 'Chevrolet', 'logo' => '../Static/images/chevrolet-logo.png']
+];
 
 // Validate brand
-if ($brand && !in_array(strtolower($brand), $valid_brands)) {
+if ($brand && !array_key_exists(strtolower($brand), $valid_brands)) {
     $brand = '';
     $error_msg = "Invalid brand selected.";
 }
@@ -49,6 +61,7 @@ if ($brand) {
         $cars = $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
         $error_msg = "Error fetching car models: " . $e->getMessage();
+        error_log("Fetch cars error: " . $e->getMessage());
     }
 }
 
@@ -58,6 +71,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['purchase'])) {
     $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
     
     try {
+        // Verify session
+        if (!isset($_SESSION['user_id'])) {
+            throw new Exception("Session expired. Please log in again.");
+        }
+
+        // Start transaction
+        $conn->beginTransaction();
+
         // Verify car exists and has stock
         $sql = "SELECT price, stock_quantity FROM cars WHERE id = :id AND stock_quantity > 0";
         $stmt = $conn->prepare($sql);
@@ -90,6 +111,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['purchase'])) {
             $stmt->bindParam(":id", $car_id, PDO::PARAM_INT);
             $stmt->execute();
             
+            $conn->commit();
+            
             $success_msg = "Purchase request submitted successfully! Your order is pending.";
             $response = ['success' => true, 'message' => $success_msg];
             
@@ -107,20 +130,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['purchase'])) {
         }
         
         if ($isAjax) {
-            header('Content-Type: application/json');
+            header('Content-Type: application/json; charset=utf-8');
             echo json_encode($response);
+            ob_end_flush();
             exit;
         }
-    } catch (PDOException $e) {
+    } catch (Exception $e) {
+        $conn->rollBack();
         $error_msg = "Error processing purchase: " . $e->getMessage();
         $response = ['success' => false, 'message' => $error_msg];
+        error_log("Purchase error: " . $e->getMessage());
         if ($isAjax) {
-            header('Content-Type: application/json');
+            header('Content-Type: application/json; charset=utf-8');
             echo json_encode($response);
+            ob_end_flush();
             exit;
         }
     }
 }
+
+// Flush output buffer before HTML
+ob_end_flush();
 ?>
 
 <!DOCTYPE html>
@@ -214,8 +244,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['purchase'])) {
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         .card:hover {
-            transform: translateY(-2px);
+            transform: scale(1.05);
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+            border-color: #3498db;
         }
         .message.success {
             background: #e0f7fa;
@@ -255,6 +286,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['purchase'])) {
             }
             .content {
                 padding: 1rem;
+            }
+            .brand-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
@@ -316,11 +350,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['purchase'])) {
         <section class="container mx-auto px-4">
             <div class="flex justify-between items-center mb-6">
                 <h1 class="text-3xl md:text-4xl font-semibold text-[#2c3e50]">
-                    Purchase Car - <?php echo $brand ? ucfirst(htmlspecialchars($brand)) : 'Select a Brand'; ?>
+                    Purchase Car - <?php echo $brand ? ucfirst(htmlspecialchars($valid_brands[strtolower($brand)]['name'])) : 'Select a Brand'; ?>
                 </h1>
                 <div class="flex items-center space-x-4">
                     <div class="flex items-center">
-                        <img src="https://via.placeholder.com/40" alt="User" class="w-10 h-10 rounded-full mr-2">
                         <span class="text-[#7f8c8d] text-lg">Hi, <?php echo htmlspecialchars($_SESSION["first_name"]); ?>!</span>
                     </div>
                 </div>
@@ -332,20 +365,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['purchase'])) {
             <?php if (!empty($error_msg)): ?>
                 <div class="message error mb-6 p-4 rounded-md"><?php echo $error_msg; ?></div>
             <?php endif; ?>
-            <!-- Brand Selection Form -->
+            <!-- Brand Selection -->
             <div class="form-container card mb-6">
                 <h2 class="text-2xl font-medium text-[#2c3e50] mb-4">Select a Car Brand</h2>
-                <form method="get" class="flex flex-col sm:flex-row gap-4">
-                    <select name="brand" id="brand" class="px-3 py-2 rounded-md bg-[#f9f9f9] text-[#2c3e50] border border-[#ecf0f1] focus:outline-none focus:ring-2 focus:ring-[#3498db] sm:w-64" required>
-                        <option value="" disabled <?php echo !$brand ? 'selected' : ''; ?>>Choose a brand</option>
-                        <?php foreach ($valid_brands as $valid_brand): ?>
-                            <option value="<?php echo htmlspecialchars($valid_brand); ?>" <?php echo strtolower($brand) === $valid_brand ? 'selected' : ''; ?>>
-                                <?php echo ucfirst(htmlspecialchars($valid_brand)); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                    <button type="submit" class="px-4 py-2 bg-[#3498db] text-white rounded-md hover:bg-[#2980b9] transition">Show Models</button>
-                </form>
+                <div class="brand-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    <?php foreach ($valid_brands as $key => $brand_info): ?>
+                        <a href="stock-form.php?brand=<?php echo htmlspecialchars($key); ?>" class="card flex flex-col items-center p-4 bg-[#f9f9f9] border border-[#ecf0f1] rounded-md hover:border-[#3498db] transition">
+                            <img src="<?php echo htmlspecialchars($brand_info['logo']); ?>" alt="<?php echo htmlspecialchars($brand_info['name']); ?> Logo" class="w-10 h-10 rounded-full mb-2 object-contain">
+                            <span class="text-[#2c3e50] font-medium"><?php echo htmlspecialchars($brand_info['name']); ?></span>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
             </div>
             <!-- Car Selection Form -->
             <div class="form-container card">
@@ -381,7 +411,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['purchase'])) {
                         </table>
                     </div>
                 <?php elseif ($brand): ?>
-                    <p class="text-[#b71c1c]">No cars available for <?php echo ucfirst(htmlspecialchars($brand)); ?>.</p>
+                    <p class="text-[#b71c1c]">No cars available for <?php echo ucfirst(htmlspecialchars($valid_brands[strtolower($brand)]['name'])); ?>.</p>
                     <a href="stock-form.php" class="inline-block mt-4 px-4 py-2 bg-[#3498db] text-white rounded-md hover:bg-[#2980b9] transition">Select Another Brand</a>
                 <?php else: ?>
                     <p class="text-[#2c3e50]">Please select a brand to view available cars.</p>
@@ -471,13 +501,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['purchase'])) {
                     e.preventDefault();
                     const formData = new FormData(form);
                     try {
-                        const response = await fetch('', {
+                        const response = await fetch(window.location.href, {
                             method: 'POST',
                             body: formData,
                             headers: {
                                 'X-Requested-With': 'XMLHttpRequest'
                             }
                         });
+                        if (!response.ok) {
+                            const text = await response.text();
+                            console.error('Non-JSON response:', text);
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
                         const result = await response.json();
                         if (result.success) {
                             const button = form.querySelector('button');
@@ -492,15 +527,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['purchase'])) {
                         }
                     } catch (error) {
                         console.error('Fetch error:', error);
-                        alert('Error: ' + error.message);
+                        const responseText = await fetch(window.location.href, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        }).then(res => res.text()).catch(() => 'Failed to retrieve response');
+                        console.error('Response text:', responseText);
+                        alert('Error: ' + error.message + '\nCheck console for details.');
                     }
                 });
             });
         });
     </script>
-<?php
-// Close connection
-unset($conn);
-?>
 </body>
 </html>
