@@ -3,8 +3,8 @@
 session_start();
 
 // Check if the user is logged in and has the customs role
-if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || $_SESSION["role"] !== "manager") {
-    header("location: ../RetailSystem-LocalGarage-Login.php");
+if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || $_SESSION["role"] !== "customs") {
+    header("location: ../../RetailSystem-LocalGarage-Login.php");
     exit;
 }
 
@@ -15,71 +15,78 @@ try {
     die("Connection failed: " . $e->getMessage());
 }
 
-// Initialize variables for messages
+// Initialize variables for messages and filters
 $success_msg = '';
 $error_msg = '';
+$status_filter = isset($_GET['status']) ? $_GET['status'] : 'all';
+$search_query = isset($_GET['search']) ? trim($_GET['search']) : '';
 
-// Fetch orders data with status, part names, and customer contact details
-$sql = "SELECT s.id, s.employee_id, s.customer_id, u.first_name, u.last_name, cu.email as customer_email, s.total, s.sale_date, s.status,
-        GROUP_CONCAT(i.part_name SEPARATOR ', ') as part_names
+// Fetch orders with optional filtering and searching
+$sql = "SELECT s.id, s.employee_id, u.first_name, u.last_name, s.total, s.sale_date, s.status 
         FROM sales s 
         LEFT JOIN users u ON s.employee_id = u.id 
-        LEFT JOIN users cu ON s.customer_id = cu.id
-        LEFT JOIN sales_items si ON s.id = si.sale_id
-        LEFT JOIN inventory i ON si.product_id = i.part_id
-        GROUP BY s.id, s.employee_id, s.customer_id, u.first_name, u.last_name, cu.email, s.total, s.sale_date, s.status
-        ORDER BY s.sale_date DESC";
+        WHERE 1=1";
+$params = [];
+if ($status_filter !== 'all') {
+    $sql .= " AND s.status = :status";
+    $params[':status'] = $status_filter;
+}
+if (!empty($search_query)) {
+    $sql .= " AND (s.id LIKE :search OR u.first_name LIKE :search OR u.last_name LIKE :search)";
+    $params[':search'] = "%$search_query%";
+}
+$sql .= " ORDER BY s.sale_date DESC";
 $stmt = $conn->prepare($sql);
+foreach ($params as $key => $value) {
+    $stmt->bindValue($key, $value);
+}
 $stmt->execute();
 $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Fetch summary data (total orders, pending, and delivered counts)
-$sql = "SELECT 
-            COUNT(*) as total_orders,
-            SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_orders,
-            SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END) as delivered_orders
-        FROM sales";
-$stmt = $conn->prepare($sql);
-$stmt->execute();
-$summary = $stmt->fetch();
-
-// Handle form submissions for marking orders as delivered
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['mark_delivered'])) {
+// Handle form submissions for marking orders as delivered or pending
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $order_id = intval($_POST['order_id']);
+    $action = $_POST['action'];
     try {
-        $sql = "UPDATE sales SET status = 'delivered' WHERE id = :id AND status = 'pending'";
+        if ($action === 'mark_delivered') {
+            $sql = "UPDATE sales SET status = 'delivered' WHERE id = :id AND status = 'pending'";
+            $success_msg = "Order marked as delivered successfully!";
+            $error_msg = "Order already delivered or not found.";
+        } elseif ($action === 'mark_pending') {
+            $sql = "UPDATE sales SET status = 'pending' WHERE id = :id AND status = 'delivered'";
+            $success_msg = "Order marked as pending successfully!";
+            $error_msg = "Order already pending or not found.";
+        }
         $stmt = $conn->prepare($sql);
         $stmt->bindParam(":id", $order_id, PDO::PARAM_INT);
         $stmt->execute();
-        if ($stmt->rowCount() > 0) {
-            $success_msg = "Order marked as delivered successfully!";
-        } else {
-            $error_msg = "Order already delivered or not found.";
+        if ($stmt->rowCount() == 0) {
+            $success_msg = '';
         }
-        // Refresh orders data
-        $sql = "SELECT s.id, s.employee_id, s.customer_id, cu.email as customer_email, u.first_name, u.last_name, s.total, s.sale_date, s.status,
-                GROUP_CONCAT(i.part_name SEPARATOR ', ') as part_names
+        // Refresh orders
+        $sql = "SELECT s.id, s.employee_id, u.first_name, u.last_name, s.total, s.sale_date, s.status 
                 FROM sales s 
-                LEFT JOIN users u ON s.employee_id = u.id
-                LEFT JOIN users cu ON s.customer_id = cu.id
-                LEFT JOIN sales_items si ON s.id = si.sale_id
-                LEFT JOIN inventory i ON si.product_id = i.part_id
-                GROUP BY s.id, s.employee_id, s.customer_id, u.first_name, u.last_name, cu.email, s.total, s.sale_date, s.status 
-                ORDER BY s.sale_date DESC";
+                LEFT JOIN users u ON s.employee_id = u.id 
+                WHERE 1=1";
+        $params = [];
+        if ($status_filter !== 'all') {
+            $sql .= " AND s.status = :status";
+            $params[':status'] = $status_filter;
+        }
+        if (!empty($search_query)) {
+            $sql .= " AND (s.id LIKE :search OR u.first_name LIKE :search OR u.last_name LIKE :search)";
+            $params[':search'] = "%$search_query%";
+        }
+        $sql .= " ORDER BY s.sale_date DESC";
         $stmt = $conn->prepare($sql);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
         $stmt->execute();
         $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        // Refresh summary
-        $sql = "SELECT 
-                COUNT(*) as total_orders,
-                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_orders,
-                SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END) as delivered_orders
-            FROM sales";
-        $stmt = $conn->prepare($sql);
-        $stmt->execute();
-        $summary = $stmt->fetch();
     } catch (PDOException $e) {
-        $error_msg = "Error marking order as delivered: " . $e->getMessage();
+        $success_msg = '';
+        $error_msg = "Error updating order status: " . $e->getMessage();
     }
 }
 ?>
@@ -96,7 +103,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['mark_delivered'])) {
     <link rel="icon" type="image/png" sizes="32x32" href="../Static/images/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="../Static/images/favicon-16x16.png">
     <link rel="manifest" href="../site.webmanifest">
-    <!-- Tailwind CSS CDN (v3) -->
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -118,9 +125,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['mark_delivered'])) {
         .navbar.sticky {
             background: #23272a;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
-        .sub-header {
-            background: #40444b;
         }
         .topbar {
             background: #2c2f33;
@@ -154,32 +158,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['mark_delivered'])) {
             padding: 2rem;
             flex: 1;
         }
-        .table-container, .card {
+        .table-container {
             background: #f9f9f9;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        .table th {
+            background: #2c3e50;
+            color: #ffffff;
+        }
+        .table tr:hover {
+            background: #ecf0f1;
         }
         .action-btn {
-            background: #2ecc71;
             transition: background 0.2s ease;
         }
         .action-btn:hover {
             background: #27ae60;
         }
-        .status-pending {
-            color: #e67e22;
-            font-weight: bold;
+        .card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        .status-delivered {
-            color: #27ae60;
-            font-weight: bold;
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
         }
         #topbar-mobile {
             display: none;
@@ -213,6 +216,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['mark_delivered'])) {
                 padding: 1rem;
             }
         }
+        .message {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+        .message.success {
+            background: #2ecc71;
+            color: #fff;
+        }
+        .message.error {
+            background: #e74c3c;
+            color: #fff;
+        }
     </style>
 </head>
 <body>
@@ -227,7 +243,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['mark_delivered'])) {
                 <a href="#" class="text-white hover:text-[#f1c40f] transition">Reviews</a>
                 <div class="flex items-center">
                     <input type="text" class="px-3 py-2 rounded-l-md bg-[#40444b] text-white placeholder-gray-300 focus:outline-none" placeholder="Search...">
-                    <button class="px-4 py-2 bg-[#ffcc00] text-[#2c2f33] rounded-r-md hover:bg-[#e6b800] transition">Search</button>
+                    <button class="px-4 py-2 bg-[#ffcc00] text-[#2c3e50] rounded-r-md hover:bg-[#e6b800] transition">Search</button>
                 </div>
                 <a href="../logout.php" class="text-red-400 hover:text-red-500 transition">Logout</a>
             </nav>
@@ -238,39 +254,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['mark_delivered'])) {
                 <a href="#" class="text-white hover:text-[#f1c40f] transition">Reviews</a>
                 <div class="flex">
                     <input type="text" class="px-3 py-2 rounded-l-md bg-[#40444b] text-white placeholder-gray-300 focus:outline-none w-full" placeholder="Search...">
-                    <button class="px-4 py-2 bg-[#ffcc00] text-[#2c2f33] rounded-r-md hover:bg-[#e6b800] transition">Search</button>
+                    <button class="px-4 py-2 bg-[#ffcc00] text-[#2c3e50] rounded-r-md hover:bg-[#e6b800] transition">Search</button>
                 </div>
                 <a href="../logout.php" class="text-red-400 hover:text-red-500 transition">Logout</a>
             </div>
         </div>
+        <!-- Top Bar -->
+        <nav id="topbar" class="topbar">
+            <div class="container mx-auto px-4">
+                <h2 class="sr-only">Customs Navigation</h2>
+                <nav>
+                    <a href="dashboard.php">Dashboard</a>
+                    <a href="customs.php">Delivery Management</a>
+                    <a href="../logout.php">Logout</a>
+                </nav>
+            </div>
+        </nav>
+        <!-- Mobile Top Bar Menu -->
+        <div id="topbar-mobile" class="md:hidden">
+            <div class="container mx-auto px-4 py-4 flex flex-col space-y-2">
+                <a href="dashboard.php" class="text-white hover:text-[#f1c40f] transition px-4 py-2">Dashboard</a>
+                <a href="customs.php" class="text-white hover:text-[#f1c40f] transition px-4 py-2">Delivery Management</a>
+                <a href="../logout.php" class="text-white hover:text-[#f1c40f] transition px-4 py-2">Logout</a>
+            </div>
+        </div>
     </header>
-
-    <!-- Top Bar (Former Sidebar) -->
-    <nav id="topbar" class="topbar">
-        <div class="container mx-auto px-4">
-            <h2 class="sr-only">Manager Navigation</h2>
-            <nav>
-                <a href="admin_dashboard.php">Dashboard</a>
-                <a href="manage_users.php">Users</a>
-                <a href="customs.php" class="bg-[#34495e] rounded-md">Customs</a>
-                <a href="orders.php">Orders</a>
-                <a href="inventory.php">Inventory</a>
-                <a href="warehouse.php">Warehouse</a>
-            </nav>
-        </div>
-    </nav>
-
-    <!-- Mobile Top Bar Menu -->
-    <div id="topbar-mobile" class="md:hidden">
-        <div class="container mx-auto px-4 py-4 flex flex-col space-y-2">
-            <a href="admin_dashboard.php" class="text-white hover:text-[#f1c40f] transition px-4 py-2">Dashboard</a>
-            <a href="manage_users.php" class="text-white hover:text-[#f1c40f] transition px-4 py-2">Users</a>
-            <a href="customs.php" class="bg-[#34495e] text-white hover:text-[#f1c40f] transition px-4 py-2">Customs</a>
-            <a href="orders.php" class="text-white hover:text-[#f1c40f] transition px-4 py-2">Orders</a>
-            <a href="inventory.php" class="text-white hover:text-[#f1c40f] transition px-4 py-2">Inventory</a>
-            <a href="warehouse.php" class="text-white hover:text-[#f1c40f] transition px-4 py-2">Warehouse</a>
-        </div>
-    </div>
 
     <!-- Toggle Button for Mobile Top Bar -->
     <button id="topbar-toggle" class="md:hidden" aria-label="Toggle top bar menu">☰</button>
@@ -278,77 +286,79 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['mark_delivered'])) {
     <!-- Main Content -->
     <main class="content">
         <section class="container mx-auto px-4">
-            <h1 class="text-3xl font-semibold text-[#2c3e50] mb-6">
+            <h1 class="text-3xl md:text-4xl font-semibold text-[#2c3e50] mb-6 text-center">
                 Delivery Management
             </h1>
 
             <!-- Success/Error Messages -->
             <?php if (!empty($success_msg)): ?>
-                <div class="bg-[#e0f7fa] text-[#006064] p-4 rounded-md mb-6">
-                    <?php echo $success_msg; ?>
-                </div>
+                <div class="message success"><?php echo $success_msg; ?></div>
             <?php endif; ?>
             <?php if (!empty($error_msg)): ?>
-                <div class="bg-[#ffebee] text-[#b71c1c] p-4 rounded-md mb-6">
-                    <?php echo $error_msg; ?>
-                </div>
+                <div class="message error"><?php echo $error_msg; ?></div>
             <?php endif; ?>
 
-            <!-- Summary -->
-            <div class="card grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
-                <div class="p-4 bg-white rounded-md shadow-sm text-center">
-                    <h4 class="text-lg font-medium text-[#2c3e50] mb-2">Total Orders</h4>
-                    <p class="text-2xl font-bold text-[#2c3e50]"><?php echo $summary['total_orders']; ?></p>
+            <!-- Filter and Search -->
+            <div class="mb-6 flex flex-col sm:flex-row gap-4">
+                <div class="flex-1">
+                    <form method="get" class="flex">
+                        <input type="text" name="search" value="<?php echo htmlspecialchars($search_query); ?>" placeholder="Search by Order ID or Employee Name..." class="px-3 py-2 rounded-l-md bg-[#f9f9f9] text-[#2c3e50] border border-[#ecf0f1] focus:outline-none flex-1">
+                        <button type="submit" class="px-4 py-2 bg-[#ffcc00] text-[#2c3e50] rounded-r-md hover:bg-[#e6b800] transition">Search</button>
+                    </form>
                 </div>
-                <div class="p-4 bg-white rounded-md shadow-sm text-center">
-                    <h4 class="text-lg font-medium text-[#2c3e50] mb-2">Pending Orders</h4>
-                    <p class="text-2xl font-bold text-[#e67e22]"><?php echo $summary['pending_orders']; ?></p>
-                </div>
-                <div class="p-4 bg-white rounded-md shadow-sm text-center">
-                    <h4 class="text-lg font-medium text-[#2c3e50] mb-2">Delivered Orders</h4>
-                    <p class="text-2xl font-bold text-[#27ae60]"><?php echo $summary['delivered_orders']; ?></p>
+                <div>
+                    <select name="status" onchange="this.form.submit()" form="filterForm" class="px-3 py-2 rounded-md bg-[#f9f9f9] text-[#2c3e50] border border-[#ecf0f1] focus:outline-none">
+                        <option value="all" <?php echo $status_filter == 'all' ? 'selected' : ''; ?>>All Statuses</option>
+                        <option value="pending" <?php echo $status_filter == 'pending' ? 'selected' : ''; ?>>Pending</option>
+                        <option value="delivered" <?php echo $status_filter == 'delivered' ? 'selected' : ''; ?>>Delivered</option>
+                    </select>
+                    <form id="filterForm" method="get" class="hidden">
+                        <input type="hidden" name="search" value="<?php echo htmlspecialchars($search_query); ?>">
+                    </form>
                 </div>
             </div>
 
             <!-- Orders Table -->
             <div class="table-container card">
-                <h3 class="text-2xl font-medium text-[#2c3e50] mb-4">Orders</h3>
+                <h2 class="text-2xl font-medium text-[#2c3e50] mb-4">All Orders</h2>
                 <div class="overflow-x-auto">
-                    <table class="w-full">
+                    <table class="table w-full">
                         <thead>
-                            <tr class="bg-[#3498db] text-white">
-                                <th class="px-4 py-2 text-left rounded-tl-md">Order ID</th>
-                                <th class="px-4 py-2 text-left">Employee</th>
-                                <th class="px-4 py-2 text-left">Total</th>
-                                <th class="px-4 py-2 text-left">Sale Date</th>
-                                <th class="px-4 py-2 text-left">Part Names</th>
-                                <th class="px-4 py-2 text-left">Customer Contact</th>
-                                <th class="px-4 py-2 text-left">Status</th>
-                                <th class="px-4 py-2 text-left rounded-tr-md">Actions</th>
+                            <tr>
+                                <th class="px-4 py-2 rounded-tl-md">Order ID</th>
+                                <th class="px-4 py-2">Employee</th>
+                                <th class="px-4 py-2">Total</th>
+                                <th class="px-4 py-2">Sale Date</th>
+                                <th class="px-4 py-2">Status</th>
+                                <th class="px-4 py-2 rounded-tr-md">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($orders)): ?>
-                                <tr><td colspan="8" class="text-center py-4 text-[#7f8c8d]">No orders found.</td></tr>
+                                <tr><td colspan="6" class="text-center py-4 text-[#2c3e50]">No orders found.</td></tr>
                             <?php else: ?>
                                 <?php foreach ($orders as $order): ?>
-                                    <tr class="hover:bg-[#f1f1f1]">
-                                        <td class="px-4 py-2 border-b border-[#ddd]"><?php echo $order['id']; ?></td>
-                                        <td class="px-4 py-2 border-b border-[#ddd]"><?php echo htmlspecialchars($order['first_name'] . ' ' . $order['last_name']); ?></td>
-                                        <td class="px-4 py-2 border-b border-[#ddd]">ZMK<?php echo number_format($order['total'], 2); ?></td>
-                                        <td class="px-4 py-2 border-b border-[#ddd]"><?php echo date('Y-m-d H:i:s', strtotime($order['sale_date'])); ?></td>
-                                        <td class="px-4 py-2 border-b border-[#ddd]"><?php echo htmlspecialchars($order['part_names'] ?? 'N/A'); ?></td>
-                                        <td class="px-4 py-2 border-b border-[#ddd]"><?php echo htmlspecialchars($order['customer_email'] ?? 'N/A'); ?></td>
-                                        <td class="px-4 py-2 border-b border-[#ddd] <?php echo $order['status'] == 'delivered' ? 'text-[#27ae60] font-semibold' : 'text-[#e67e22] font-semibold'; ?>">
+                                    <tr>
+                                        <td class="px-4 py-2"><?php echo htmlspecialchars($order['id']); ?></td>
+                                        <td class="px-4 py-2"><?php echo htmlspecialchars($order['first_name'] . ' ' . $order['last_name']); ?></td>
+                                        <td class="px-4 py-2">ZMK<?php echo number_format($order['total'], 2); ?></td>
+                                        <td class="px-4 py-2"><?php echo date('Y-m-d H:i:s', strtotime($order['sale_date'])); ?></td>
+                                        <td class="px-4 py-2 status-<?php echo $order['status']; ?>">
                                             <?php echo ucfirst($order['status']); ?>
                                         </td>
-                                        <td class="px-4 py-2 border-b border-[#ddd]">
-                                            <form method="post" class="inline">
+                                        <td class="px-4 py-2 flex gap-2">
+                                            <form method="post" class="mark-delivered-form" data-order-id="<?php echo $order['id']; ?>">
                                                 <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
-                                                <button type="submit" name="mark_delivered" 
-                                                    class="<?php echo $order['status'] == 'delivered' ? 'bg-gray-300 cursor-not-allowed' : 'bg-[#2ecc71] hover:bg-[#27ae60]'; ?> text-white px-3 py-1 rounded-md transition" 
-                                                    <?php echo $order['status'] == 'delivered' ? 'disabled' : ''; ?>>
-                                                    <?php echo $order['status'] == 'delivered' ? 'Delivered' : 'Mark Delivered'; ?>
+                                                <input type="hidden" name="action" value="mark_delivered">
+                                                <button type="submit" name="mark_delivered" class="action-btn px-4 py-2 text-white rounded-md <?php echo $order['status'] == 'delivered' ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#2ecc71] hover:bg-[#27ae60]'; ?>" <?php echo $order['status'] == 'delivered' ? 'disabled' : ''; ?>>
+                                                    Mark Delivered
+                                                </button>
+                                            </form>
+                                            <form method="post" class="mark-pending-form" data-order-id="<?php echo $order['id']; ?>">
+                                                <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
+                                                <input type="hidden" name="action" value="mark_pending">
+                                                <button type="submit" name="mark_pending" class="action-btn px-4 py-2 text-white rounded-md <?php echo $order['status'] == 'pending' ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#3498db] hover:bg-[#2980b9]'; ?>" <?php echo $order['status'] == 'pending' ? 'disabled' : ''; ?>>
+                                                    Mark Pending
                                                 </button>
                                             </form>
                                         </td>
@@ -444,10 +454,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['mark_delivered'])) {
         }
         updateCopyright();
     </script>
-</body>
-</html>
-
 <?php
 // Close connection
 unset($conn);
 ?>
+</body>
+</html>
