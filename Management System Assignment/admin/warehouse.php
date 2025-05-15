@@ -136,28 +136,13 @@ $conn->close();
                 <a href="../logout.php" class="text-red-400 hover:text-red-500 transition">Logout</a>
             </div>
         </div>
-        <!-- Sub-Header -->
-        <div class="sub-header text-white text-sm py-3">
-            <div class="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
-                <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-6 text-center">
-                    <div><i class="fas fa-map-marker-alt mr-1"></i> Lusaka, Zambia</div>
-                    <div><i class="fas fa-phone mr-1"></i> +260 987654321</div>
-                    <div><i class="fas fa-envelope mr-1"></i> <a href="mailto:info@zedauto.com" class="hover:text-[#f1c40f] transition">info@zedauto.com</a></div>
-                </div>
-                <div class="flex space-x-4">
-                    <a href="../sell.html" class="hover:text-[#f1c40f] transition">Sell Car</a>
-                    <a href="../RetailSystem-LocalGarage-Login.php" class="hover:text-[#f1c40f] transition">Buy Car</a>
-                    <a href="../RetailSystem-Signup.php" class="hover:text-[#f1c40f] transition">Order Parts</a>
-                </div>
-            </div>
-        </div>
     </header>
 
     <!-- Main Content -->
     <main class="flex-1 py-8">
         <section class="container mx-auto px-4">
             <h1 class="text-3xl md:text-4xl font-semibold text-[#2c3e50] mb-6 text-center">
-                Welcome back, <?php echo htmlspecialchars($_SESSION["email"]); ?>!
+                Welcome back, <?php echo htmlspecialchars($_SESSION["first_name"]); ?>!
             </h1>
 
             <!-- Inventory -->

@@ -48,7 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_user'])) {
             // Check if email is already used by another user
             $sql = "SELECT id FROM users WHERE email = :email AND id != :user_id";
             $stmt = $conn->prepare($sql);
-            $stmt->bindParam(":email", $email,   PDO::PARAM_STR);
+            $stmt->bindParam(":email", $email, PDO::PARAM_STR);
             $stmt->bindParam(":user_id", $user_id, PDO::PARAM_INT);
             $stmt->execute();
             if ($stmt->fetch()) {
@@ -106,287 +106,369 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_user'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Users - ZedAuto</title>
+    <title>ZedAuto - Manage Users</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/ico" href="../favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../Static/images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../Static/images/favicon-16x16.png">
+    <link rel="manifest" href="../site.webmanifest">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .sidebar {
-            width: 250px;
-            height: 100vh;
-            position: fixed;
-            background-color: #2c3e50;
-            padding-top: 20px;
-            color: white;
-            transition: transform 0.3s ease;
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #ecf0f1;
+            color: #2c3e50;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-        .sidebar h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 18px;
+        .navbar {
+            background: #2c2f33;
+            transition: background 0.3s ease;
         }
-        .sidebar a {
-            display: block;
-            padding: 12px 20px;
-            color: white;
+        .navbar.sticky {
+            background: #23272a;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .topbar {
+            background: #2c2f33;
+            color: #ffffff;
+            padding: 0.75rem 0;
+            z-index: 900;
+        }
+        .topbar .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .topbar nav {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+        }
+        .topbar a {
+            color: #ffffff;
             text-decoration: none;
-            font-size: 16px;
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+            transition: background 0.2s ease;
         }
-        .sidebar a:hover {
-            background-color: #34495e;
+        .topbar a:hover {
+            background: #34495e;
+            border-radius: 4px;
         }
         .content {
-            margin-left: 250px;
-            padding: 20px;
-            transition: margin-left 0.3s ease;
+            padding: 2rem;
+            flex: 1;
         }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
+        .table-container {
+            background: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
         }
-        .header h1 {
-            font-size: 24px;
-            color: #2c3e50;
+        .table th {
+            background: #2c3e50;
+            color: #ffffff;
         }
-        .header .user-info {
-            display: flex;
-            align-items: center;
-        }
-        .header .user-info img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-        .header .user-info span {
-            font-size: 16px;
-            color: #7f8c8d;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h2 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 20px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        th, td {
-            padding: 10px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
-        th {
-            background-color: #4CAF50;
-            color: white;
-        }
-        .success-message {
-            color: green;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-        .error-message {
-            color: red;
-            text-align: center;
-            margin-bottom: 10px;
+        .table tr:hover {
+            background: #ecf0f1;
         }
         .action-btn {
-            padding: 5px 10px;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            text-align: center;
-            display: inline-block;
+            background: #2ecc71;
+            transition: background 0.2s ease;
         }
-        .edit-btn {
-            background-color: #3498db;
-        }
-        .edit-btn:hover {
-            background-color: #2980b9;
+        .action-btn:hover {
+            background: #27ae60;
         }
         .delete-btn {
-            background-color: #e74c3c;
+            background: #e74c3c;
+            transition: background 0.2s ease;
         }
         .delete-btn:hover {
-            background-color: #c0392b;
+            background: #c0392b;
         }
-        .save-btn {
-            background-color: #2ecc71;
+        .card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        .save-btn:hover {
-            background-color: #27ae60;
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
         }
-        .cancel-btn {
-            background-color: #7f8c8d;
+        #topbar-mobile {
+            display: none;
+            background: #2c2f33;
         }
-        .cancel-btn:hover {
-            background-color: #6c7a89;
-        }
-        input[type="text"], input[type="email"], select {
-            width: 100%;
-            padding: 5px;
-            border: 1px solid #ddd;
+        #topbar-toggle {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: #2c2f33;
+            color: #ffffff;
+            padding: 0.5rem;
             border-radius: 4px;
         }
-        #toggleBtn {
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            display: none;
-            z-index: 1000;
-        }
         @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-250px);
+            .topbar nav {
+                display: none;
             }
-            .sidebar.active {
-                transform: translateX(0);
+            #topbar-mobile {
+                display: none;
+            }
+            #topbar-mobile.active {
+                display: block;
+            }
+            #topbar-toggle {
+                display: block;
             }
             .content {
-                margin-left: 0;
-            }
-            #toggleBtn {
-                display: block;
+                padding: 1rem;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Sidebar -->
-    <div id="sidebar" class="sidebar">
-        <h2>ZedAuto Admin</h2>
-        <a href="dashboard.php">Dashboard</a>
-        <a href="manage_users.php">Users</a>
-        <a href="customs.php">Customs</a>
-        <a href="orders.php">Orders</a>
-        <a href="inventory.php">Inventory</a>
-        <a href="../logout.php">Logout</a>
-    </div>
-
-    <!-- Toggle Button for Mobile -->
-    <button id="toggleBtn">☰</button>
-
-    <!-- Main Content -->
-    <div id="content" class="content">
-        <div class="header">
-            <h1>Manage Users</h1>
-            <div class="user-info">
-                <img src="../images/avatar.jpg" alt="User Avatar">
-                <span><?php echo htmlspecialchars($_SESSION['first_name']); ?></span>
+    <!-- Navbar -->
+    <header class="navbar sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="../RetailSytsem-Home.html" class="text-2xl font-bold text-white">ZedAuto</a>
+            <button id="hamburger" class="md:hidden text-white text-2xl focus:outline-none" aria-label="Toggle menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <nav id="nav-menu" class="hidden md:flex items-center space-x-6">
+                <a href="#" class="text-white hover:text-[#f1c40f] transition">Reviews</a>
+                <div class="flex items-center">
+                    <input type="text" class="px-3 py-2 rounded-l-md bg-[#40444b] text-white placeholder-gray-300 focus:outline-none" placeholder="Search...">
+                    <button class="px-4 py-2 bg-[#ffcc00] text-[#2c3e50] rounded-r-md hover:bg-[#e6b800] transition">Search</button>
+                </div>
+                <a href="../logout.php" class="text-red-400 hover:text-red-500 transition">Logout</a>
+            </nav>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-[#2c2f33]">
+            <div class="container mx-auto px-4 py-4 flex flex-col space-y-4">
+                <a href="#" class="text-white hover:text-[#f1c40f] transition">Reviews</a>
+                <div class="flex">
+                    <input type="text" class="px-3 py-2 rounded-l-md bg-[#40444b] text-white placeholder-gray-300 focus:outline-none w-full" placeholder="Search...">
+                    <button class="px-4 py-2 bg-[#ffcc00] text-[#2c3e50] rounded-r-md hover:bg-[#e6b800] transition">Search</button>
+                </div>
+                <a href="../logout.php" class="text-red-400 hover:text-red-500 transition">Logout</a>
             </div>
         </div>
-        <div class="container">
-            <h2>User Management</h2>
-
+        <!-- Top Bar -->
+        <nav id="topbar" class="topbar">
+            <div class="container mx-auto px-4">
+                <h2 class="sr-only">Manager Navigation</h2>
+                <nav>
+                    <a href="dashboard.php">Dashboard</a>
+                    <a href="manage_users.php">Users</a>
+                    <a href="customs.php">Customs</a>
+                    <a href="orders.php">Orders</a>
+                    <a href="inventory.php">Inventory</a>
+                    <a href="warehouse.php">Warehouse</a>
+                </nav>
+            </div>
+        </nav>
+        <!-- Mobile Top Bar Menu -->
+        <div id="topbar-mobile" class="md:hidden">
+            <div class="container mx-auto px-4 py-4 flex flex-col space-y-2">
+                <a href="dashboard.php" class="text-white hover:text-[#f1c40f] transition px-4 py-2">Dashboard</a>
+                <a href="manage_users.php" class="text-white hover:text-[#f1c40f] transition px-4 py-2">Users</a>
+                <a href="customs.php" class="text-white hover:text-[#f1c40f] transition px-4 py-2">Customs</a>
+                <a href="orders.php" class="text-white hover:text-[#f1c40f] transition px-4 py-2">Orders</a>
+                <a href="inventory.php" class="text-white hover:text-[#f1c40f] transition px-4 py-2">Inventory</a>
+                <a href="warehouse.php" class="text-white hover:text-[#f1c40f] transition px-4 py-2">Warehouse</a>
+            </div>
+        </div>
+    </header>
+    <!-- Toggle Button for Mobile Top Bar -->
+    <button id="topbar-toggle" class="md:hidden" aria-label="Toggle top bar menu">☰</button>
+    <!-- Main Content -->
+    <main class="content">
+        <section class="container mx-auto px-4">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl md:text-4xl font-semibold text-[#2c3e50]">
+                    Manage Users
+                </h1>
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center">
+                        <img src="../images/avatar.jpg" alt="User" class="w-10 h-10 rounded-full mr-2">
+                        <span class="text-[#7f8c8d] text-lg">Hi, <?php echo htmlspecialchars($_SESSION["first_name"]); ?>!</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Success/Error Messages -->
             <?php if (!empty($success_msg)): ?>
-                <div class="success-message"><?php echo $success_msg; ?></div>
+                <div class="mb-6 p-4 bg-[#e0f7fa] text-[#006064] rounded-md"><?php echo $success_msg; ?></div>
             <?php endif; ?>
             <?php if (!empty($error)): ?>
-                <div class="error-message"><?php echo $error; ?></div>
+                <div class="mb-6 p-4 bg-[#ffebee] text-[#b71c1c] rounded-md"><?php echo $error; ?></div>
             <?php endif; ?>
-
             <!-- Users Table -->
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>First Name</th>
-                        <th>Last Name</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Role</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($users as $user): ?>
-                        <?php if (isset($_POST['edit_mode']) && $_POST['user_id'] == $user['id']): ?>
-                            <!-- Edit Form -->
+            <div class="table-container card">
+                <h2 class="text-2xl font-medium text-[#2c3e50] mb-4">User Management</h2>
+                <div class="overflow-x-auto">
+                    <table class="table w-full">
+                        <thead>
                             <tr>
-                                <td><?php echo $user['id']; ?></td>
-                                <td>
-                                    <input type="text" name="first_name" value="<?php echo htmlspecialchars($user['first_name']); ?>" required>
-                                </td>
-                                <td>
-                                    <input type="text" name="last_name" value="<?php echo htmlspecialchars($user['last_name']); ?>" required>
-                                </td>
-                                <td>
-                                    <input type="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" required>
-                                </td>
-                                <td>
-                                    <input type="text" name="phone" value="<?php echo htmlspecialchars($user['phone']); ?>" required pattern="[0-9]{10,15}">
-                                </td>
-                                <td>
-                                    <select name="role" required>
-                                        <option value="manager" <?php echo $user['role'] == 'manager' ? 'selected' : ''; ?>>Manager</option>
-                                        <option value="sales" <?php echo $user['role'] == 'sales' ? 'selected' : ''; ?>>Sales</option>
-                                        <option value="customer" <?php echo $user['role'] == 'customer' ? 'selected' : ''; ?>>Customer</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <form method="post" style="display:inline;">
-                                        <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
-                                        <button type="submit" name="edit_user" class="action-btn save-btn">Save</button>
-                                        <button type="button" onclick="window.location.reload();" class="action-btn cancel-btn">Cancel</button>
-                                    </form>
-                                </td>
+                                <th class="px-4 py-2 rounded-tl-md">ID</th>
+                                <th class="px-4 py-2">First Name</th>
+                                <th class="px-4 py-2">Last Name</th>
+                                <th class="px-4 py-2">Email</th>
+                                <th class="px-4 py-2">Phone</th>
+                                <th class="px-4 py-2">Role</th>
+                                <th class="px-4 py-2 rounded-tr-md">Actions</th>
                             </tr>
-                        <?php else: ?>
-                            <!-- Display Row -->
-                            <tr>
-                                <td><?php echo $user['id']; ?></td>
-                                <td><?php echo htmlspecialchars($user['first_name']); ?></td>
-                                <td><?php echo htmlspecialchars($user['last_name']); ?></td>
-                                <td><?php echo htmlspecialchars($user['email']); ?></td>
-                                <td><?php echo htmlspecialchars($user['phone']); ?></td>
-                                <td><?php echo htmlspecialchars($user['role']); ?></td>
-                                <td>
-                                    <form method="post" style="display:inline;">
-                                        <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
-                                        <input type="hidden" name="edit_mode" value="1">
-                                        <button type="submit" class="action-btn edit-btn">Edit</button>
-                                    </form>
-                                    <form method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this user?');">
-                                        <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
-                                        <button type="submit" name="delete_user" class="action-btn delete-btn">Delete</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($users as $user): ?>
+                                <?php if (isset($_POST['edit_mode']) && $_POST['user_id'] == $user['id']): ?>
+                                    <!-- Edit Form -->
+                                    <tr>
+                                        <td class="px-4 py-2"><?php echo $user['id']; ?></td>
+                                        <td class="px-4 py-2">
+                                            <input type="text" name="first_name" value="<?php echo htmlspecialchars($user['first_name']); ?>" class="px-3 py-2 border border-[#ddd] rounded-md focus:outline-none focus:ring-2 focus:ring-[#3498db]" required>
+                                        </td>
+                                        <td class="px-4 py-2">
+                                            <input type="text" name="last_name" value="<?php echo htmlspecialchars($user['last_name']); ?>" class="px-3 py-2 border border-[#ddd] rounded-md focus:outline-none focus:ring-2 focus:ring-[#3498db]" required>
+                                        </td>
+                                        <td class="px-4 py-2">
+                                            <input type="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" class="px-3 py-2 border border-[#ddd] rounded-md focus:outline-none focus:ring-2 focus:ring-[#3498db]" required>
+                                        </td>
+                                        <td class="px-4 py-2">
+                                            <input type="text" name="phone" value="<?php echo htmlspecialchars($user['phone']); ?>" class="px-3 py-2 border border-[#ddd] rounded-md focus:outline-none focus:ring-2 focus:ring-[#3498db]" required pattern="[0-9]{10,15}">
+                                        </td>
+                                        <td class="px-4 py-2">
+                                            <select name="role" class="px-3 py-2 border border-[#ddd] rounded-md focus:outline-none focus:ring-2 focus:ring-[#3498db]" required>
+                                                <option value="manager" <?php echo $user['role'] == 'manager' ? 'selected' : ''; ?>>Manager</option>
+                                                <option value="sales" <?php echo $user['role'] == 'sales' ? 'selected' : ''; ?>>Sales</option>
+                                                <option value="customer" <?php echo $user['role'] == 'customer' ? 'selected' : ''; ?>>Customer</option>
+                                            </select>
+                                        </td>
+                                        <td class="px-4 py-2">
+                                            <form method="post" class="flex gap-4">
+                                                <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
+                                                <button type="submit" name="edit_user" class="px-4 py-2 bg-[#2ecc71] text-white rounded-md hover:bg-[#27ae60] transition">Save</button>
+                                                <button type="button" onclick="window.location.reload();" class="px-4 py-2 bg-[#e74c3c] text-white rounded-md hover:bg-[#c0392b] transition">Cancel</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php else: ?>
+                                    <!-- Display Row -->
+                                    <tr>
+                                        <td class="px-4 py-2"><?php echo $user['id']; ?></td>
+                                        <td class="px-4 py-2"><?php echo htmlspecialchars($user['first_name']); ?></td>
+                                        <td class="px-4 py-2"><?php echo htmlspecialchars($user['last_name']); ?></td>
+                                        <td class="px-4 py-2"><?php echo htmlspecialchars($user['email']); ?></td>
+                                        <td class="px-4 py-2"><?php echo htmlspecialchars($user['phone']); ?></td>
+                                        <td class="px-4 py-2"><?php echo htmlspecialchars($user['role']); ?></td>
+                                        <td class="px-4 py-2">
+                                            <div class="flex gap-4">
+                                                <form method="post">
+                                                    <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
+                                                    <input type="hidden" name="edit_mode" value="1">
+                                                    <button type="submit" class="px-4 py-2 bg-[#2ecc71] text-white rounded-md hover:bg-[#27ae60] transition action-btn">Edit</button>
+                                                </form>
+                                                <form method="post" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                                    <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
+                                                    <button type="submit" name="delete_user" class="px-4 py-2 bg-[#e74c3c] text-white rounded-md hover:bg-[#c0392b] transition delete-btn">Delete</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+    <!-- Footer -->
+    <footer class="bg-[#2c3e50] text-[#ecf0f1] py-10">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">ZedAuto</h3>
+                    <p class="text-[#7f8c8d]">Providing top-notch automotive services in Lusaka, Zambia.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="../RetailSytsem-Home.html" class="hover:text-[#f1c40f] transition">Home</a></li>
+                        <li><a href="../about.php" class="hover:text-[#f1c40f] transition">About Us</a></li>
+                        <li><a href="#" class="hover:text-[#f1c40f] transition">Services</a></li>
+                        <li><a href="../contact.php" class="hover:text-[#f1c40f] transition">Contact</a></li>
+                        <li><a href="#" class="hover:text-[#f1c40f] transition">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">Connect With Us</h3>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-2xl hover:text-[#f1c40f] transition"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-2xl hover:text-[#f1c40f] transition"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-2xl hover:text-[#f1c40f] transition"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-8 text-[#7f8c8d]">
+                <span id="copyright">© 2025 ZedAuto. All rights reserved.</span>
+            </div>
         </div>
-    </div>
-
+    </footer>
+    <!-- JavaScript -->
     <script>
-        // Sidebar toggle for mobile
-        const toggleBtn = document.getElementById('toggleBtn');
-        const sidebar = document.getElementById('sidebar');
-        const content = document.getElementById('content');
-
-        toggleBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
+        // Navbar Hamburger Menu Toggle
+        const hamburger = document.getElementById('hamburger');
+        const mobileMenu = document.getElementById('mobile-menu');
+        hamburger.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
         });
+        // Close navbar mobile menu when a link is clicked
+        const mobileLinks = mobileMenu.querySelectorAll('a');
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+            });
+        });
+        // Top Bar Toggle
+        const topbarToggle = document.getElementById('topbar-toggle');
+        const topbarMobile = document.getElementById('topbar-mobile');
+        topbarToggle.addEventListener('click', () => {
+            topbarMobile.classList.toggle('active');
+        });
+        // Close top bar mobile menu when a link is clicked
+        const topbarLinks = topbarMobile.querySelectorAll('a');
+        topbarLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                topbarMobile.classList.remove('active');
+            });
+        });
+        // Sticky Navbar
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            navbar.classList.toggle('sticky', window.scrollY > 50);
+        });
+        // Update Copyright Year
+        function updateCopyright() {
+            const copyrightElement = document.getElementById('copyright');
+            const currentYear = new Date().getFullYear();
+            const baseYear = 2025;
+            if (currentYear > baseYear) {
+                copyrightElement.textContent = `© ${baseYear}-${currentYear} ZedAuto. All rights reserved.`;
+            }
+        }
+        updateCopyright();
     </script>
-</body>
-</html>
-
 <?php
 // Close connection
 unset($conn);
