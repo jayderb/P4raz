@@ -6,38 +6,40 @@ session_start();
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || $_SESSION["role"] !== 'warehouse') {
     session_unset();
     session_destroy();
-    header("location: warehouse-login.php?error=unauthorized_access");
+    header("location: Retail System-Warehouse-Login.php?error=unauthorized_access");
     exit;
 }
 
-// Database connection (update with your credentials)
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "zedauto_db";
+// Include database connection
+require_once 'db_connection.php';
 
-try {
-    $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    
-    // Fetch inventory data
-    $inventoryStmt = $conn->prepare("SELECT part_id, part_name, quantity, price FROM inventory WHERE warehouse_id = :warehouse_id");
-    $inventoryStmt->execute(['warehouse_id' => $_SESSION['warehouse_id']]);
-    $inventory = $inventoryStmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    // Fetch pending dispatch orders
-    $dispatchStmt = $conn->prepare("SELECT order_id, customer_id, part_id, quantity, status, order_date FROM dispatch_orders WHERE status = 'pending' AND warehouse_id = :warehouse_id");
-    $dispatchStmt->execute(['warehouse_id' => $_SESSION['warehouse_id']]);
-    $dispatchOrders = $dispatchStmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    // Fetch recent activity logs
-    $activityStmt = $conn->prepare("SELECT action, details, timestamp FROM activity_logs WHERE warehouse_id = :warehouse_id ORDER BY timestamp DESC LIMIT 10");
-    $activityStmt->execute(['warehouse_id' => $_SESSION['warehouse_id']]);
-    $activityLogs = $activityStmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    echo "Connection failed: " . $e->getMessage();
-    exit;
-}
+$conn = connectionToDatabase();
+
+// Fetch inventory data
+$stmt = $conn->prepare("SELECT part_id, part_name, quantity, unit_price FROM inventory WHERE warehouse_id = ?");
+$stmt->bind_param("i", $_SESSION['warehouse_id']);
+$stmt->execute();
+$result = $stmt->get_result();
+$inventory = $result->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+// Fetch pending dispatch orders
+$stmt = $conn->prepare("SELECT order_id, customer_id, part_id, quantity, status, order_date FROM dispatch_orders WHERE status = 'pending' AND warehouse_id = ?");
+$stmt->bind_param("i", $_SESSION['warehouse_id']);
+$stmt->execute();
+$result = $stmt->get_result();
+$dispatchOrders = $result->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+// Fetch recent activity logs
+$stmt = $conn->prepare("SELECT action, details, timestamp FROM activity_logs WHERE warehouse_id = ? ORDER BY timestamp DESC LIMIT 10");
+$stmt->bind_param("i", $_SESSION['warehouse_id']);
+$stmt->execute();
+$result = $stmt->get_result();
+$activityLogs = $result->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -477,7 +479,7 @@ try {
                                     <td><?php echo htmlspecialchars($item['part_id']); ?></td>
                                     <td><?php echo htmlspecialchars($item['part_name']); ?></td>
                                     <td><?php echo htmlspecialchars($item['quantity']); ?></td>
-                                    <td><?php echo number_format($item['price'], 2); ?></td>
+                                    <td><?php echo number_format($item['unit_price'], 2); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>

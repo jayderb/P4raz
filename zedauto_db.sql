@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 14, 2025 at 10:53 PM
+-- Generation Time: May 15, 2025 at 11:01 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -24,6 +24,20 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `activity_logs`
+--
+
+CREATE TABLE `activity_logs` (
+  `log_id` int(11) NOT NULL,
+  `warehouse_id` int(11) NOT NULL,
+  `action` varchar(50) NOT NULL,
+  `details` text NOT NULL,
+  `timestamp` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `customer_details`
 --
 
@@ -34,6 +48,22 @@ CREATE TABLE `customer_details` (
   `state` varchar(50) DEFAULT NULL,
   `zip_code` varchar(10) DEFAULT NULL,
   `loyalty_points` int(11) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `dispatch_orders`
+--
+
+CREATE TABLE `dispatch_orders` (
+  `order_id` int(11) NOT NULL,
+  `warehouse_id` int(11) NOT NULL,
+  `customer_id` int(11) NOT NULL,
+  `part_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `status` enum('pending','dispatched','cancelled') DEFAULT 'pending',
+  `order_date` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -58,6 +88,7 @@ CREATE TABLE `employee_details` (
 
 CREATE TABLE `inventory` (
   `part_id` int(11) NOT NULL,
+  `warehouse_id` int(11) NOT NULL,
   `part_name` varchar(100) NOT NULL,
   `description` text DEFAULT NULL,
   `category` varchar(50) DEFAULT NULL,
@@ -334,6 +365,7 @@ CREATE TABLE `users` (
   `first_name` varchar(100) NOT NULL,
   `last_name` varchar(100) NOT NULL,
   `role` enum('customer','sales','manager','customs') DEFAULT NULL,
+  `warehouse_id` int(11) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `last_login` timestamp NULL DEFAULT NULL,
   `phone` int(225) NOT NULL
@@ -343,14 +375,14 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `email`, `password`, `first_name`, `last_name`, `role`, `created_at`, `last_login`, `phone`) VALUES
-(1, 'jaykalobwe18@gmail.com', '$2y$10$MrJWkORbQgkwEyrR2Aw9bukxggno4TcPYQe7BlwmTSykPTcfVl.bO', 'John', 'Doe', 'customer', '2025-04-29 13:34:01', '2025-05-04 22:27:11', 972483388),
-(2, 'employee@example.com', '$2y$10$qpTirFDSyu7GYJeDWH2QPOSNzixEqVHh8V/hyElsj/ymWiqHoRvHu', 'Jane', 'Smith', 'sales', '2025-04-29 13:34:01', '2025-05-04 22:27:11', 555),
-(3, 'manager@example.com', '$2y$10$F.dvWcUw9xxzfq61I9Ibz.dhRkQW1wOClbQmK16IZy9vXSQrNm9Mq', 'Michael', 'Johnson', 'manager', '2025-04-29 13:34:01', '2025-05-04 22:27:11', 555),
-(5, 'employee@zedauto.com', '$2y$10$rFJGhyEZkHKiNrAuGv3WxOBcysx7rzm1BnqbZ9HKSjwXm/Qw3nYPK', 'Test', 'Employee', 'customer', '2025-04-30 14:18:12', '2025-05-04 22:27:11', 2147483647),
-(7, 'admin1@zedauto.com', '$2y$10$rFJGhyEZkHKiNrAuGv3WxOBcysx7rzm1BnqbZ9HKSjwXm/Qw3nYPK', 'Admin', 'User', 'manager', '2025-04-30 14:29:18', '2025-05-04 22:27:11', 2147483647),
-(9, 'employee1@zedauto.com', '$2y$10$3FmhaW0hqHhOkwAc13qGbe62j8dUJUkENEV6WDPoM6ijZYdsEDMX6', 'Daniel', 'Kay', 'sales', '2025-05-02 14:58:40', '2025-05-04 22:27:11', 0),
-(13, 'customs@zedauto.com', '$2y$10$3y4dGxbCgctYVC5Z0YXptu8KSOCD6USVK4xO2EnPSxyfR0n9fB9t6', 'Eu', 'Customs', 'customs', '2025-05-04 23:22:20', NULL, 0);
+INSERT INTO `users` (`id`, `email`, `password`, `first_name`, `last_name`, `role`, `warehouse_id`, `created_at`, `last_login`, `phone`) VALUES
+(1, 'jaykalobwe18@gmail.com', '$2y$10$MrJWkORbQgkwEyrR2Aw9bukxggno4TcPYQe7BlwmTSykPTcfVl.bO', 'John', 'Doe', 'customer', 0, '2025-04-29 13:34:01', '2025-05-04 22:27:11', 972483388),
+(2, 'employee@example.com', '$2y$10$qpTirFDSyu7GYJeDWH2QPOSNzixEqVHh8V/hyElsj/ymWiqHoRvHu', 'Jane', 'Smith', 'sales', 0, '2025-04-29 13:34:01', '2025-05-04 22:27:11', 555),
+(3, 'manager@example.com', '$2y$10$F.dvWcUw9xxzfq61I9Ibz.dhRkQW1wOClbQmK16IZy9vXSQrNm9Mq', 'Michael', 'Johnson', 'manager', 0, '2025-04-29 13:34:01', '2025-05-04 22:27:11', 555),
+(5, 'employee@zedauto.com', '$2y$10$rFJGhyEZkHKiNrAuGv3WxOBcysx7rzm1BnqbZ9HKSjwXm/Qw3nYPK', 'Test', 'Employee', 'customer', 0, '2025-04-30 14:18:12', '2025-05-04 22:27:11', 2147483647),
+(7, 'admin1@zedauto.com', '$2y$10$rFJGhyEZkHKiNrAuGv3WxOBcysx7rzm1BnqbZ9HKSjwXm/Qw3nYPK', 'Admin', 'User', 'manager', 0, '2025-04-30 14:29:18', '2025-05-04 22:27:11', 2147483647),
+(9, 'employee1@zedauto.com', '$2y$10$3FmhaW0hqHhOkwAc13qGbe62j8dUJUkENEV6WDPoM6ijZYdsEDMX6', 'Daniel', 'Kay', 'sales', 0, '2025-05-02 14:58:40', '2025-05-04 22:27:11', 0),
+(13, 'customs@zedauto.com', '$2y$10$3y4dGxbCgctYVC5Z0YXptu8KSOCD6USVK4xO2EnPSxyfR0n9fB9t6', 'Eu', 'Customs', 'customs', 0, '2025-05-04 23:22:20', NULL, 0);
 
 --
 -- Triggers `users`
@@ -377,10 +409,26 @@ DELIMITER ;
 --
 
 --
+-- Indexes for table `activity_logs`
+--
+ALTER TABLE `activity_logs`
+  ADD PRIMARY KEY (`log_id`),
+  ADD KEY `warehouse_id` (`warehouse_id`);
+
+--
 -- Indexes for table `customer_details`
 --
 ALTER TABLE `customer_details`
   ADD PRIMARY KEY (`customer_id`);
+
+--
+-- Indexes for table `dispatch_orders`
+--
+ALTER TABLE `dispatch_orders`
+  ADD PRIMARY KEY (`order_id`),
+  ADD KEY `warehouse_id` (`warehouse_id`),
+  ADD KEY `customer_id` (`customer_id`),
+  ADD KEY `part_id` (`part_id`);
 
 --
 -- Indexes for table `employee_details`
@@ -392,7 +440,8 @@ ALTER TABLE `employee_details`
 -- Indexes for table `inventory`
 --
 ALTER TABLE `inventory`
-  ADD PRIMARY KEY (`part_id`);
+  ADD PRIMARY KEY (`part_id`),
+  ADD KEY `idx_warehouse_id` (`warehouse_id`);
 
 --
 -- Indexes for table `login_logs`
@@ -466,11 +515,24 @@ ALTER TABLE `sales_items`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `email` (`email`);
+  ADD UNIQUE KEY `email` (`email`),
+  ADD KEY `idx_warehouse_id` (`warehouse_id`);
 
 --
 -- AUTO_INCREMENT for dumped tables
 --
+
+--
+-- AUTO_INCREMENT for table `activity_logs`
+--
+ALTER TABLE `activity_logs`
+  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `dispatch_orders`
+--
+ALTER TABLE `dispatch_orders`
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `inventory`
@@ -537,10 +599,24 @@ ALTER TABLE `users`
 --
 
 --
+-- Constraints for table `activity_logs`
+--
+ALTER TABLE `activity_logs`
+  ADD CONSTRAINT `activity_logs_ibfk_1` FOREIGN KEY (`warehouse_id`) REFERENCES `users` (`warehouse_id`);
+
+--
 -- Constraints for table `customer_details`
 --
 ALTER TABLE `customer_details`
   ADD CONSTRAINT `customer_details_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `dispatch_orders`
+--
+ALTER TABLE `dispatch_orders`
+  ADD CONSTRAINT `dispatch_orders_ibfk_1` FOREIGN KEY (`warehouse_id`) REFERENCES `users` (`warehouse_id`),
+  ADD CONSTRAINT `dispatch_orders_ibfk_2` FOREIGN KEY (`customer_id`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `dispatch_orders_ibfk_3` FOREIGN KEY (`part_id`) REFERENCES `inventory` (`part_id`);
 
 --
 -- Constraints for table `employee_details`
