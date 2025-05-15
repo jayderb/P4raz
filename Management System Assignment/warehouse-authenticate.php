@@ -2,20 +2,8 @@
 // Initialize the session
 session_start();
 
-// Database connection (update with your credentials)
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "zedauto_db";
-
-try {
-    $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    $_SESSION['login_err'] = "Database connection failed. Please try again later.";
-    header("location: warehouse-login.php");
-    exit;
-}
+// Include database connection
+require_once 'db_connection.php';
 
 // Initialize error variables
 $email_err = $password_err = $login_err = "";
@@ -25,7 +13,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Validate CSRF token
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         $_SESSION['login_err'] = "Invalid CSRF token.";
-        header("location: Retail System-Warehouse-login.php");
+        header("location: Retail System-Warehouse-Login.php");
         exit;
     }
 
@@ -45,17 +33,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Proceed if no validation errors
     if (empty($email_err) && empty($password_err)) {
-        try {
-            $stmt = $conn->prepare("SELECT id, email, password, warehouse_id FROM warehouse_users WHERE email = :email");
-            $stmt->execute(['email' => $email]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        $conn = connectionToDatabase();
+        
+        // Prepare and execute query
+        $stmt = $conn->prepare("SELECT id, email, password, warehouse_id, role FROM users WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $user = $result->fetch_assoc();
+        $stmt->close();
 
-            if ($user && password_verify($password, $user['password'])) {
+        if ($user && password_verify($password, $user['password'])) {
+            // Check if user has appropriate role
+            if (in_array($user['role'], ['warehouse', 'manager'])) {
                 // Password is correct, start a new session
                 $_SESSION["loggedin"] = true;
-                $_SESSION["id"] = $user['id'];
+                $_SESSION["user_id"] = $user['id']; // Changed from "id" to "user_id"
                 $_SESSION["email"] = $user['email'];
-                $_SESSION["role"] = 'warehouse';
+                $_SESSION["role"] = $user['role'];
                 $_SESSION["warehouse_id"] = $user['warehouse_id'];
 
                 // Regenerate session ID for security
@@ -63,24 +58,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 // Redirect to warehouse dashboard
                 header("location: warehouse/dashboard.php");
+                $conn->close();
                 exit;
             } else {
-                $login_err = "Invalid email or password.";
+                $login_err = "You do not have permission to access the warehouse dashboard.";
             }
-        } catch (PDOException $e) {
-            $login_err = "An error occurred. Please try again later.";
+        } else {
+            $login_err = "Invalid email or password.";
         }
+        $conn->close();
     }
 
     // Store errors in session and redirect back to login page
     $_SESSION['email_err'] = $email_err;
     $_SESSION['password_err'] = $password_err;
     $_SESSION['login_err'] = $login_err;
-    header("location: Retail System-Warehouse-login.php");
+    header("location: Retail System-Warehouse-Login.php");
     exit;
 } else {
     // If not a POST request, redirect to login page
-    header("location: warehouse-login.php");
+    header("location: Retail System-Warehouse-Login.php");
     exit;
 }
 ?>

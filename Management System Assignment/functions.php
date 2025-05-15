@@ -6,6 +6,23 @@ session_start();
 
 require_once 'db_connection.php';
 
+// Define connectToDatabase if not already defined in db_connection.php
+if (!function_exists('connectToDatabase')) {
+    function connectToDatabase() {
+        $servername = "localhost";
+        $username = "root";
+        $password = "";
+        $dbname = "zedauto_db"; 
+
+        $conn = new mysqli($servername, $username, $password, $dbname);
+
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+        return $conn;
+    }
+}
+
 function isLoggedIn() {
     return isset($_SESSION["user_id"]) && isset($_SESSION["role"]);    
 }
