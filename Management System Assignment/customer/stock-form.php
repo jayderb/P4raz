@@ -1,20 +1,31 @@
 <?php
-// Start output buffering to catch stray output
+// Start output buffering to capture any unintended output
 ob_start();
+
+// Enable debug mode (set to false in production)
+$debug_mode = true;
+
+// Set error reporting (disable display for AJAX to prevent HTML output)
+ini_set('display_errors', $debug_mode && empty($_SERVER['HTTP_X_REQUESTED_WITH']) ? 1 : 0);
+ini_set('log_errors', 1);
+ini_set('error_log', '/var/log/php_errors.log'); // Adjust path as needed
+error_reporting(E_ALL);
 
 // Start the session
 session_start();
 
 // Debug session
-error_log("Session in stock-form.php: loggedin=" . (isset($_SESSION["loggedin"]) ? $_SESSION["loggedin"] : "unset") . 
-          ", role=" . (isset($_SESSION["role"]) ? $_SESSION["role"] : "unset") . 
-          ", user_id=" . (isset($_SESSION["user_id"]) ? $_SESSION["user_id"] : "unset"));
+error_log("[" . date('Y-m-d H:i:s') . "] Session in stock-form.php: " . print_r($_SESSION, true));
 
 // Check if the user is logged in and has the customer role
-if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || $_SESSION["role"] !== "customer" || !isset($_SESSION["user_id"])) {
-    error_log("Redirecting to login: loggedin=" . (isset($_SESSION["loggedin"]) ? $_SESSION["loggedin"] : "unset") . 
-              ", role=" . (isset($_SESSION["role"]) ? $_SESSION["role"] : "unset") . 
-              ", user_id=" . (isset($_SESSION["user_id"]) ? $_SESSION["user_id"] : "unset"));
+if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || $_SESSION["role"] !== "customer" || !isset($_SESSION["user_id"]) || !is_numeric($_SESSION["user_id"])) {
+    error_log("[" . date('Y-m-d H:i:s') . "] Redirecting to login due to invalid session");
+    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['success' => false, 'message' => 'Session expired. Please log in again.']);
+        ob_end_flush();
+        exit;
+    }
     header("location: ../RetailSystem-Customer-Login.php");
     ob_end_flush();
     exit;
@@ -23,17 +34,23 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || $_SESSION
 // Include config file
 try {
     require_once "../config.php";
-} catch (PDOException $e) {
-    error_log("Config error: " . $e->getMessage());
+} catch (Exception $e) {
+    error_log("[" . date('Y-m-d H:i:s') . "] Config error: " . $e->getMessage());
+    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['success' => false, 'message' => 'Connection failed: ' . $e->getMessage()]);
+        ob_end_flush();
+        exit;
+    }
     die("Connection failed: " . $e->getMessage());
 }
 
 // Initialize variables
-$success_msg = '';
-$error_msg = '';
+$success_msg = isset($_GET['success']) ? htmlspecialchars($_GET['success']) : '';
+$error_msg = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : '';
 $brand = isset($_GET['brand']) ? trim($_GET['brand']) : '';
 $valid_brands = [
-    'toyota' => ['name' => 'Toyota', 'logo' => '../Static/images/Toyota.jpg'],
+    'toyota' => ['name' => 'Toyota', 'logo' => '../Static/images/toyota-logo.jpg'],
     'mercedes' => ['name' => 'Mercedes', 'logo' => '../Static/images/mercedes-logo.png'],
     'bmw' => ['name' => 'BMW', 'logo' => '../Static/images/bmw-logo.png'],
     'nissan' => ['name' => 'Nissan', 'logo' => '../Static/images/nissan-logo.png'],
@@ -54,26 +71,38 @@ if ($brand) {
     try {
         $sql = "SELECT id, model, price, stock_quantity 
                 FROM cars 
-                WHERE LOWER(brand) = :brand AND stock_quantity > 0";
+                WHERE LOWER(brand) = :brand";
         $stmt = $conn->prepare($sql);
         $stmt->bindParam(":brand", $brand, PDO::PARAM_STR);
         $stmt->execute();
         $cars = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        error_log("[" . date('Y-m-d H:i:s') . "] Fetched " . count($cars) . " cars for brand: $brand");
     } catch (PDOException $e) {
         $error_msg = "Error fetching car models: " . $e->getMessage();
-        error_log("Fetch cars error: " . $e->getMessage());
+        error_log("[" . date('Y-m-d H:i:s') . "] Fetch cars error: " . $e->getMessage());
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false, 'message' => $error_msg]);
+            ob_end_flush();
+            exit;
+        }
     }
 }
 
 // Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['purchase'])) {
-    $car_id = intval($_POST['car_id']);
+    $car_id = isset($_POST['car_id']) ? intval($_POST['car_id']) : 0;
     $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
     
+    error_log("[" . date('Y-m-d H:i:s') . "] Starting purchase: user_id={$_SESSION['user_id']}, car_id=$car_id, isAjax=$isAjax");
+    
     try {
-        // Verify session
-        if (!isset($_SESSION['user_id'])) {
-            throw new Exception("Session expired. Please log in again.");
+        // Validate inputs
+        if ($car_id <= 0) {
+            throw new Exception("Invalid car ID.");
+        }
+        if (!isset($_SESSION['user_id']) || !is_numeric($_SESSION['user_id'])) {
+            throw new Exception("Session expired or invalid user ID. Please log in again.");
         }
 
         // Start transaction
@@ -87,6 +116,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['purchase'])) {
         $car = $stmt->fetch();
         
         if ($car) {
+            error_log("[" . date('Y-m-d H:i:s') . "] Car found: id=$car_id, price={$car['price']}, stock={$car['stock_quantity']}");
+
             // Create sale record
             $sql = "INSERT INTO sales (customer_id, total, sale_date, status) 
                     VALUES (:customer_id, :total, NOW(), 'pending')";
@@ -95,31 +126,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['purchase'])) {
             $stmt->bindParam(":total", $car['price'], PDO::PARAM_STR);
             $stmt->execute();
             $sale_id = $conn->lastInsertId();
-            
-            // Insert into sales_items
-            $sql = "INSERT INTO sales_items (sale_id, product_id, quantity, price) 
-                    VALUES (:sale_id, :product_id, 1, :price)";
+            error_log("[" . date('Y-m-d H:i:s') . "] Sale created: sale_id=$sale_id");
+
+            // Insert into sales_cars
+            $sql = "INSERT INTO sales_cars (sale_id, car_id, quantity, price) 
+                    VALUES (:sale_id, :car_id, 1, :price)";
             $stmt = $conn->prepare($sql);
             $stmt->bindParam(":sale_id", $sale_id, PDO::PARAM_INT);
-            $stmt->bindParam(":product_id", $car_id, PDO::PARAM_INT);
+            $stmt->bindParam(":car_id", $car_id, PDO::PARAM_INT);
             $stmt->bindParam(":price", $car['price'], PDO::PARAM_STR);
             $stmt->execute();
-            
+            error_log("[" . date('Y-m-d H:i:s') . "] Sales car added: sale_id=$sale_id, car_id=$car_id");
+
             // Decrease stock quantity
             $sql = "UPDATE cars SET stock_quantity = stock_quantity - 1 WHERE id = :id";
             $stmt = $conn->prepare($sql);
             $stmt->bindParam(":id", $car_id, PDO::PARAM_INT);
             $stmt->execute();
-            
+            $rows_affected = $stmt->rowCount();
+            error_log("[" . date('Y-m-d H:i:s') . "] Stock updated: car_id=$car_id, rows_affected=$rows_affected");
+
             $conn->commit();
             
             $success_msg = "Purchase request submitted successfully! Your order is pending.";
             $response = ['success' => true, 'message' => $success_msg];
-            
+
             // Refresh car list
             $sql = "SELECT id, model, price, stock_quantity 
                     FROM cars 
-                    WHERE LOWER(brand) = :brand AND stock_quantity > 0";
+                    WHERE LOWER(brand) = :brand";
             $stmt = $conn->prepare($sql);
             $stmt->bindParam(":brand", $brand, PDO::PARAM_STR);
             $stmt->execute();
@@ -127,11 +162,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['purchase'])) {
         } else {
             $error_msg = "Selected car is out of stock or not found.";
             $response = ['success' => false, 'message' => $error_msg];
+            error_log("[" . date('Y-m-d H:i:s') . "] Car not found or out of stock: car_id=$car_id");
         }
         
         if ($isAjax) {
             header('Content-Type: application/json; charset=utf-8');
+            // Check for buffered output
+            if (ob_get_length()) {
+                error_log("[" . date('Y-m-d H:i:s') . "] Unexpected output buffer: " . ob_get_contents());
+                ob_clean(); // Clear any unexpected output
+            }
             echo json_encode($response);
+            ob_end_flush();
+            exit;
+        } else {
+            header("Location: stock-form.php?brand=$brand&" . ($car ? "success=" . urlencode($success_msg) : "error=" . urlencode($error_msg)));
             ob_end_flush();
             exit;
         }
@@ -139,20 +184,58 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['purchase'])) {
         $conn->rollBack();
         $error_msg = "Error processing purchase: " . $e->getMessage();
         $response = ['success' => false, 'message' => $error_msg];
-        error_log("Purchase error: " . $e->getMessage());
+        error_log("[" . date('Y-m-d H:i:s') . "] Purchase error: " . $e->getMessage() . " at " . $e->getFile() . ":" . $e->getLine());
         if ($isAjax) {
             header('Content-Type: application/json; charset=utf-8');
+            // Check for buffered output
+            if (ob_get_length()) {
+                error_log("[" . date('Y-m-d H:i:s') . "] Unexpected output buffer in error: " . ob_get_contents());
+                ob_clean();
+            }
             echo json_encode($response);
+            ob_end_flush();
+            exit;
+        } else {
+            header("Location: stock-form.php?brand=$brand&error=" . urlencode($error_msg));
             ob_end_flush();
             exit;
         }
     }
 }
 
-// Flush output buffer before HTML
-ob_end_flush();
-?>
+// Debug endpoint for testing purchase
+if (isset($_GET['debug_purchase']) && $debug_mode) {
+    $car_id = isset($_GET['car_id']) ? intval($_GET['car_id']) : 0;
+    $response = ['success' => false, 'message' => 'Debug purchase failed'];
+    try {
+        if ($car_id <= 0 || !isset($_SESSION['user_id'])) {
+            throw new Exception("Invalid car_id or session.");
+        }
+        $sql = "SELECT price, stock_quantity FROM cars WHERE id = :id AND stock_quantity > 0";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(":id", $car_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $car = $stmt->fetch();
+        $response = ['success' => !!$car, 'message' => $car ? "Car found: price={$car['price']}, stock={$car['stock_quantity']}" : "Car not found or out of stock"];
+    } catch (Exception $e) {
+        $response['message'] = "Debug error: " . $e->getMessage();
+    }
+    header('Content-Type: application/json; charset=utf-8');
+    // Check for buffered output
+    if (ob_get_length()) {
+        error_log("[" . date('Y-m-d H:i:s') . "] Unexpected output buffer in debug: " . ob_get_contents());
+        ob_clean();
+    }
+    echo json_encode($response);
+    ob_end_flush();
+    exit;
+}
 
+// Flush output buffer before HTML if no AJAX request
+if (empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+    ob_end_flush();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -223,7 +306,7 @@ ob_end_flush();
         .table-container, .form-container {
             background: #f9f9f9;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12 zichtbaar rgba(0, 0, 0, 0.1);
             padding: 1.5rem;
         }
         .table th {
@@ -354,6 +437,7 @@ ob_end_flush();
                 </h1>
                 <div class="flex items-center space-x-4">
                     <div class="flex items-center">
+                        <img src="https://via.placeholder.com/40" alt="User" class="w-10 h-10 rounded-full mr-2">
                         <span class="text-[#7f8c8d] text-lg">Hi, <?php echo htmlspecialchars($_SESSION["first_name"]); ?>!</span>
                     </div>
                 </div>
@@ -398,12 +482,16 @@ ob_end_flush();
                                         <td class="px-4 py-2"><?php echo number_format($car['price'], 2); ?></td>
                                         <td class="px-4 py-2"><?php echo $car['stock_quantity']; ?></td>
                                         <td class="px-4 py-2">
-                                            <form method="post" class="purchase-form" data-car-id="<?php echo $car['id']; ?>">
-                                                <input type="hidden" name="car_id" value="<?php echo $car['id']; ?>">
-                                                <button type="submit" name="purchase" class="px-4 py-2 text-white rounded-md bg-[#2ecc71] hover:bg-[#27ae60] action-btn transition">
-                                                    Purchase
-                                                </button>
-                                            </form>
+                                            <?php if ($car['stock_quantity'] > 0): ?>
+                                                <form method="post" class="purchase-form" data-car-id="<?php echo $car['id']; ?>">
+                                                    <input type="hidden" name="car_id" value="<?php echo $car['id']; ?>">
+                                                    <button type="submit" name="purchase" class="px-4 py-2 text-white rounded-md bg-[#2ecc71] hover:bg-[#27ae60] action-btn transition">
+                                                        Purchase
+                                                    </button>
+                                                </form>
+                                            <?php else: ?>
+                                                <span class="text-[#b71c1c]">Out of Stock</span>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -499,7 +587,12 @@ ob_end_flush();
             document.querySelectorAll('.purchase-form').forEach(form => {
                 form.addEventListener('submit', async (e) => {
                     e.preventDefault();
+                    const carId = form.querySelector('input[name="car_id"]').value;
+                    if (!confirm(`Are you sure you want to purchase this car (ID: ${carId})?`)) {
+                        return;
+                    }
                     const formData = new FormData(form);
+                    console.log('Submitting purchase for car_id:', carId);
                     try {
                         const response = await fetch(window.location.href, {
                             method: 'POST',
@@ -510,10 +603,12 @@ ob_end_flush();
                         });
                         if (!response.ok) {
                             const text = await response.text();
-                            console.error('Non-JSON response:', text);
-                            throw new Error(`HTTP error! Status: ${response.status}`);
+                            console.error('Non-JSON response:', text.substring(0, 500));
+                            alert('Error: Unable to process purchase. Check console for details.');
+                            return;
                         }
                         const result = await response.json();
+                        console.log('Purchase response:', result);
                         if (result.success) {
                             const button = form.querySelector('button');
                             button.textContent = 'Purchased';
@@ -527,15 +622,7 @@ ob_end_flush();
                         }
                     } catch (error) {
                         console.error('Fetch error:', error);
-                        const responseText = await fetch(window.location.href, {
-                            method: 'POST',
-                            body: formData,
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        }).then(res => res.text()).catch(() => 'Failed to retrieve response');
-                        console.error('Response text:', responseText);
-                        alert('Error: ' + error.message + '\nCheck console for details.');
+                        alert('Error: Unable to process purchase. Please try again or contact support.');
                     }
                 });
             });
