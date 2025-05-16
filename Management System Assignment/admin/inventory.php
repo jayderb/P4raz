@@ -2,7 +2,7 @@
 // Start the session
 session_start();
 
-// Check if the user is logged in and has the admin role
+// Check if the user is logged in and has the manager role
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || $_SESSION["role"] !== "manager") {
     header("location: ../RetailSystem-LocalGarage-Login.php");
     exit;
@@ -20,100 +20,127 @@ $success_msg = '';
 $error_msg = '';
 
 // Fetch inventory data
-$sql = "SELECT id, name, price, stock FROM products";
+$sql = "SELECT part_id, warehouse_id, part_name, description, category, quantity, unit_price, reorder_level, supplier_id, last_updated FROM inventory";
 $stmt = $conn->prepare($sql);
 $stmt->execute();
 $inventory = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Define low stock threshold
-$low_stock_threshold = 5;
-
 // Check for low stock items
-$low_stock_items = array_filter($inventory, function($item) use ($low_stock_threshold) {
-    return $item['stock'] < $low_stock_threshold;
+$low_stock_items = array_filter($inventory, function($item) {
+    return $item['quantity'] < $item['reorder_level'] && $item['reorder_level'] > 0;
 });
 
 // Handle form submissions
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['add_product'])) {
         // Add new product
-        $name = trim($_POST['name']);
-        $price = floatval($_POST['price']);
-        $stock = intval($_POST['stock']);
+        $part_name = trim($_POST['part_name']);
+        $warehouse_id = intval($_POST['warehouse_id']);
+        $description = trim($_POST['description']);
+        $category = trim($_POST['category']);
+        $quantity = intval($_POST['quantity']);
+        $unit_price = floatval($_POST['unit_price']);
+        $reorder_level = intval($_POST['reorder_level']);
+        $supplier_id = !empty($_POST['supplier_id']) ? intval($_POST['supplier_id']) : null;
 
-        if (!empty($name) && $price > 0 && $stock >= 0) {
+        if (!empty($part_name) && $unit_price > 0 && $quantity >= 0) {
             try {
-                $sql = "INSERT INTO products (name, price, stock, created_at) VALUES (:name, :price, :stock, NOW())";
+                $sql = "INSERT INTO inventory (warehouse_id, part_name, description, category, quantity, unit_price, reorder_level, supplier_id) 
+                        VALUES (:warehouse_id, :part_name, :description, :category, :quantity, :unit_price, :reorder_level, :supplier_id)";
                 $stmt = $conn->prepare($sql);
-                $stmt->bindParam(":name", $name, PDO::PARAM_STR);
-                $stmt->bindParam(":price", $price, PDO::PARAM_STR);
-                $stmt->bindParam(":stock", $stock, PDO::PARAM_INT);
+                $stmt->bindParam(":warehouse_id", $warehouse_id, PDO::PARAM_INT);
+                $stmt->bindParam(":part_name", $part_name, PDO::PARAM_STR);
+                $stmt->bindParam(":description", $description, PDO::PARAM_STR);
+                $stmt->bindParam(":category", $category, PDO::PARAM_STR);
+                $stmt->bindParam(":quantity", $quantity, PDO::PARAM_INT);
+                $stmt->bindParam(":unit_price", $unit_price, PDO::PARAM_STR);
+                $stmt->bindParam(":reorder_level", $reorder_level, PDO::PARAM_INT);
+                $stmt->bindParam(":supplier_id", $supplier_id, PDO::PARAM_INT);
                 $stmt->execute();
-                $success_msg = "Product added successfully!";
+                $success_msg = "Part added successfully!";
+                
                 // Refresh inventory data
-                $sql = "SELECT id, name, price, stock FROM products";
+                $sql = "SELECT part_id, warehouse_id, part_name, description, category, quantity, unit_price, reorder_level, supplier_id, last_updated FROM inventory";
                 $stmt = $conn->prepare($sql);
                 $stmt->execute();
                 $inventory = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                $low_stock_items = array_filter($inventory, function($item) use ($low_stock_threshold) {
-                    return $item['stock'] < $low_stock_threshold;
+                $low_stock_items = array_filter($inventory, function($item) {
+                    return $item['quantity'] < $item['reorder_level'] && $item['reorder_level'] > 0;
                 });
             } catch (PDOException $e) {
-                $error_msg = "Error adding product: " . $e->getMessage();
+                $error_msg = "Error adding part: " . $e->getMessage();
             }
         } else {
-            $error_msg = "Please provide valid product details.";
+            $error_msg = "Please provide valid part details.";
         }
-    } elseif (isset($_POST['update_product'])) {
-        // Update existing product
-        $product_id = intval($_POST['product_id']);
-        $name = trim($_POST['name']);
-        $price = floatval($_POST['price']);
-        $stock = intval($_POST['stock']);
+    } elseif (isset($_POST['update_inventory'])) {
+        // Update existing part
+        $part_id = intval($_POST['part_id']);
+        $part_name = trim($_POST['part_name']);
+        $description = trim($_POST['description']);
+        $category = trim($_POST['category']);
+        $quantity = intval($_POST['quantity']);
+        $unit_price = floatval($_POST['unit_price']);
+        $reorder_level = intval($_POST['reorder_level']);
+        $supplier_id = !empty($_POST['supplier_id']) ? intval($_POST['supplier_id']) : null;
 
-        if (!empty($name) && $price > 0 && $stock >= 0) {
+        if (!empty($part_name) && $unit_price > 0 && $quantity >= 0) {
             try {
-                $sql = "UPDATE products SET name = :name, price = :price, stock = :stock WHERE id = :id";
+                $sql = "UPDATE inventory 
+                        SET part_name = :part_name, 
+                            description = :description, 
+                            category = :category, 
+                            quantity = :quantity, 
+                            unit_price = :unit_price, 
+                            reorder_level = :reorder_level, 
+                            supplier_id = :supplier_id 
+                        WHERE part_id = :part_id";
                 $stmt = $conn->prepare($sql);
-                $stmt->bindParam(":name", $name, PDO::PARAM_STR);
-                $stmt->bindParam(":price", $price, PDO::PARAM_STR);
-                $stmt->bindParam(":stock", $stock, PDO::PARAM_INT);
-                $stmt->bindParam(":id", $product_id, PDO::PARAM_INT);
+                $stmt->bindParam(":part_name", $part_name, PDO::PARAM_STR);
+                $stmt->bindParam(":description", $description, PDO::PARAM_STR);
+                $stmt->bindParam(":category", $category, PDO::PARAM_STR);
+                $stmt->bindParam(":quantity", $quantity, PDO::PARAM_INT);
+                $stmt->bindParam(":unit_price", $unit_price, PDO::PARAM_STR);
+                $stmt->bindParam(":reorder_level", $reorder_level, PDO::PARAM_INT);
+                $stmt->bindParam(":supplier_id", $supplier_id, PDO::PARAM_INT);
+                $stmt->bindParam(":part_id", $part_id, PDO::PARAM_INT);
                 $stmt->execute();
-                $success_msg = "Product updated successfully!";
+                $success_msg = "Part updated successfully!";
+                
                 // Refresh inventory data
-                $sql = "SELECT id, name, price, stock FROM products";
+                $sql = "SELECT part_id, warehouse_id, part_name, description, category, quantity, unit_price, reorder_level, supplier_id, last_updated FROM inventory";
                 $stmt = $conn->prepare($sql);
                 $stmt->execute();
                 $inventory = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                $low_stock_items = array_filter($inventory, function($item) use ($low_stock_threshold) {
-                    return $item['stock'] < $low_stock_threshold;
+                $low_stock_items = array_filter($inventory, function($item) {
+                    return $item['quantity'] < $item['reorder_level'] && $item['reorder_level'] > 0;
                 });
             } catch (PDOException $e) {
-                $error_msg = "Error updating product: " . $e->getMessage();
+                $error_msg = "Error updating part: " . $e->getMessage();
             }
         } else {
-            $error_msg = "Please provide valid product details.";
+            $error_msg = "Please provide valid part details.";
         }
     } elseif (isset($_POST['delete_product'])) {
-        // Delete product
-        $product_id = intval($_POST['product_id']);
+        // Delete part
+        $part_id = intval($_POST['part_id']);
         try {
-            $sql = "DELETE FROM products WHERE id = :id";
+            $sql = "DELETE FROM inventory WHERE part_id = :part_id";
             $stmt = $conn->prepare($sql);
-            $stmt->bindParam(":id", $product_id, PDO::PARAM_INT);
+            $stmt->bindParam(":part_id", $part_id, PDO::PARAM_INT);
             $stmt->execute();
-            $success_msg = "Product deleted successfully!";
+            $success_msg = "Part deleted successfully!";
+            
             // Refresh inventory data
-            $sql = "SELECT id, name, price, stock FROM products";
+            $sql = "SELECT part_id, warehouse_id, part_name, description, category, quantity, unit_price, reorder_level, supplier_id, last_updated FROM inventory";
             $stmt = $conn->prepare($sql);
             $stmt->execute();
             $inventory = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            $low_stock_items = array_filter($inventory, function($item) use ($low_stock_threshold) {
-                return $item['stock'] < $low_stock_threshold;
+            $low_stock_items = array_filter($inventory, function($item) {
+                return $item['quantity'] < $item['reorder_level'] && $item['reorder_level'] > 0;
             });
         } catch (PDOException $e) {
-            $error_msg = "Error deleting product: " . $e->getMessage();
+            $error_msg = "Error deleting part: " . $e->getMessage();
         }
     }
 }
@@ -323,7 +350,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <span class="text-[#7f8c8d] text-lg">Hi, <?php echo htmlspecialchars($_SESSION["first_name"]); ?>!</span>
                     </div>
                     <button onclick="document.getElementById('addForm').classList.toggle('hidden')" class="px-4 py-2 bg-[#2ecc71] text-white rounded-md hover:bg-[#27ae60] transition">
-                        Add Product
+                        Add Part
                     </button>
                 </div>
             </div>
@@ -334,15 +361,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <?php if (!empty($error_msg)): ?>
                 <div class="mb-6 p-4 bg-[#ffebee] text-[#b71c1c] rounded-md"><?php echo $error_msg; ?></div>
             <?php endif; ?>
-            <!-- Add Product Form -->
+            <!-- Add Part Form -->
             <div id="addForm" class="table-container mb-8 card hidden">
-                <h2 class="text-2xl font-medium text-[#2c3e50] mb-4">Add New Product</h2>
-                <form method="post" class="flex flex-col sm:flex-row gap-4">
-                    <input type="text" name="name" placeholder="Product Name" class="px-3 py-2 border border-[#ddd] rounded-md focus:outline-none focus:ring-2 focus:ring-[#3498db]" required>
-                    <input type="number" name="price" placeholder="Price" step="0.01" min="0" class="px-3 py-2 border border-[#ddd] rounded-md focus:outline-none focus:ring-2 focus:ring-[#3498db]" required>
-                    <input type="number" name="stock" placeholder="Stock" min="0" class="px-3 py-2 border border-[#ddd] rounded-md focus:outline-none focus:ring-2 focus:ring-[#3498db]" required>
-                    <div class="flex gap-4">
-                        <button type="submit" name="add_product" class="px-4 py-2 bg-[#2ecc71] text-white rounded-md hover:bg-[#27ae60] transition">Add Product</button>
+                <h2 class="text-2xl font-medium text-[#2c3e50] mb-4">Add New Part</h2>
+                <form method="post" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <input type="number" name="warehouse_id" placeholder="Warehouse ID" class="px-3 py-2 border border-[#ddd] rounded-md focus:outline-none focus:ring-2 focus:ring-[#3498db]" required value="1">
+                    <input type="text" name="part_name" placeholder="Part Name" class="px-3 py-2 border border-[#ddd] rounded-md focus:outline-none focus:ring-2 focus:ring-[#3498db]" required>
+                    <input type="text" name="description" placeholder="Description" class="px-3 py-2 border border-[#ddd] rounded-md focus:outline-none focus:ring-2 focus:ring-[#3498db]">
+                    <input type="text" name="category" placeholder="Category" class="px-3 py-2 border border-[#ddd] rounded-md focus:outline-none focus:ring-2 focus:ring-[#3498db]">
+                    <input type="number" name="quantity" placeholder="Quantity" min="0" class="px-3 py-2 border border-[#ddd] rounded-md focus:outline-none focus:ring-2 focus:ring-[#3498db]" required>
+                    <input type="number" name="unit_price" placeholder="Unit Price" step="0.01" min="0" class="px-3 py-2 border border-[#ddd] rounded-md focus:outline-none focus:ring-2 focus:ring-[#3498db]" required>
+                    <input type="number" name="reorder_level" placeholder="Reorder Level" min="0" class="px-3 py-2 border border-[#ddd] rounded-md focus:outline-none focus:ring-2 focus:ring-[#3498db]" required>
+                    <input type="number" name="supplier_id" placeholder="Supplier ID (optional)" class="px-3 py-2 border border-[#ddd] rounded-md focus:outline-none focus:ring-2 focus:ring-[#3498db]">
+                    <div class="flex gap-4 col-span-1 md:col-span-2 lg:col-span-3">
+                        <button type="submit" name="add_product" class="px-4 py-2 bg-[#2ecc71] text-white rounded-md hover:bg-[#27ae60] transition">Add Part</button>
                         <button type="button" onclick="document.getElementById('addForm').classList.add('hidden')" class="px-4 py-2 bg-[#e74c3c] text-white rounded-md hover:bg-[#c0392b] transition">Cancel</button>
                     </div>
                 </form>
@@ -354,7 +386,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <p class="text-[#2c3e50] mb-2">Please order new parts for the following items:</p>
                     <ul class="list-disc pl-5 text-[#2c3e50]">
                         <?php foreach ($low_stock_items as $item): ?>
-                            <li><?php echo htmlspecialchars($item['name']); ?> (Stock: <?php echo $item['stock']; ?>)</li>
+                            <li><?php echo htmlspecialchars($item['part_name']); ?> (Stock: <?php echo $item['quantity']; ?>, Reorder Level: <?php echo $item['reorder_level']; ?>)</li>
                         <?php endforeach; ?>
                     </ul>
                     <p class="mt-2"><a href="#" class="text-[#3498db] hover:text-[#2980b9] underline">Order Now</a></p>
@@ -367,36 +399,54 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <table class="table w-full">
                         <thead>
                             <tr>
-                                <th class="px-4 py-2 rounded-tl-md">Product Name</th>
-                                <th class="px-4 py-2">Price</th>
-                                <th class="px-4 py-2">Stock</th>
-                                <th class="px-4 py-2 rounded-tr-md">Actions</th>
+                                <th class="px-4 py-2">ID</th>
+                                <th class="px-4 py-2">Part Name</th>
+                                <th class="px-4 py-2">Category</th>
+                                <th class="px-4 py-2">Quantity</th>
+                                <th class="px-4 py-2">Unit Price</th>
+                                <th class="px-4 py-2">Reorder Level</th>
+                                <th class="px-4 py-2">Last Updated</th>
+                                <th class="px-4 py-2">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($inventory as $item): ?>
                                 <tr>
-                                    <td class="px-4 py-2"><?php echo htmlspecialchars($item['name']); ?></td>
-                                    <td class="px-4 py-2">ZMK<?php echo number_format($item['price'], 2); ?></td>
-                                    <td class="px-4 py-2"><?php echo $item['stock']; ?></td>
+                                    <td class="px-4 py-2"><?php echo $item['part_id']; ?></td>
+                                    <td class="px-4 py-2"><?php echo htmlspecialchars($item['part_name']); ?></td>
+                                    <td class="px-4 py-2"><?php echo htmlspecialchars($item['category'] ?? 'N/A'); ?></td>
+                                    <td class="px-4 py-2"><?php echo $item['quantity']; ?></td>
+                                    <td class="px-4 py-2">ZMK<?php echo number_format($item['unit_price'], 2); ?></td>
+                                    <td class="px-4 py-2"><?php echo $item['reorder_level']; ?></td>
+                                    <td class="px-4 py-2"><?php echo date('Y-m-d H:i', strtotime($item['last_updated'])); ?></td>
                                     <td class="px-4 py-2">
-                                        <div class="hidden" id="editForm-<?php echo $item['id']; ?>">
-                                            <form method="post" class="flex flex-col sm:flex-row gap-4">
-                                                <input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
-                                                <input type="text" name="name" value="<?php echo htmlspecialchars($item['name']); ?>" class="px-3 py-2 border border-[#ddd] rounded-md focus:outline-none focus:ring-2 focus:ring-[#3498db]" required>
-                                                <input type="number" name="price" value="<?php echo $item['price']; ?>" step="0.01" min="0" class="px-3 py-2 border border-[#ddd] rounded-md focus:outline-none focus:ring-2 focus:ring-[#3498db]" required>
-                                                <input type="number" name="stock" value="<?php echo $item['stock']; ?>" min="0" class="px-3 py-2 border border-[#ddd] rounded-md focus:outline-none focus:ring-2 focus:ring-[#3498db]" required>
-                                                <div class="flex gap-4">
-                                                    <button type="submit" name="update_product" class="px-4 py-2 bg-[#2ecc71] text-white rounded-md hover:bg-[#27ae60] transition">Save</button>
-                                                    <button type="button" onclick="document.getElementById('editForm-<?php echo $item['id']; ?>').classList.add('hidden')" class="px-4 py-2 bg-[#e74c3c] text-white rounded-md hover:bg-[#c0392b] transition">Cancel</button>
+                                        <div class="hidden" id="editForm-<?php echo $item['part_id']; ?>">
+                                            <form method="post" class="grid grid-cols-1 gap-2">
+                                                <input type="hidden" name="part_id" value="<?php echo $item['part_id']; ?>">
+                                                <div class="flex gap-2">
+                                                    <input type="text" name="part_name" value="<?php echo htmlspecialchars($item['part_name']); ?>" class="w-full px-2 py-1 border border-[#ddd] rounded-md focus:outline-none focus:ring-1 focus:ring-[#3498db]" required>
+                                                    <input type="text" name="category" value="<?php echo htmlspecialchars($item['category'] ?? ''); ?>" class="w-full px-2 py-1 border border-[#ddd] rounded-md focus:outline-none focus:ring-1 focus:ring-[#3498db]">
+                                                </div>
+                                                <div class="flex gap-2">
+                                                    <input type="number" name="quantity" value="<?php echo $item['quantity']; ?>" min="0" class="w-full px-2 py-1 border border-[#ddd] rounded-md focus:outline-none focus:ring-1 focus:ring-[#3498db]" required>
+                                                    <input type="number" name="unit_price" value="<?php echo $item['unit_price']; ?>" step="0.01" min="0" class="w-full px-2 py-1 border border-[#ddd] rounded-md focus:outline-none focus:ring-1 focus:ring-[#3498db]" required>
+                                                </div>
+                                                <div class="flex gap-2">
+                                                    <input type="number" name="reorder_level" value="<?php echo $item['reorder_level']; ?>" min="0" class="w-full px-2 py-1 border border-[#ddd] rounded-md focus:outline-none focus:ring-1 focus:ring-[#3498db]" required>
+                                                    <input type="text" name="description" value="<?php echo htmlspecialchars($item['description'] ?? ''); ?>" class="w-full px-2 py-1 border border-[#ddd] rounded-md focus:outline-none focus:ring-1 focus:ring-[#3498db]">
+                                                    <input type="number" name="supplier_id" value="<?php echo $item['supplier_id']; ?>" class="w-full px-2 py-1 border border-[#ddd] rounded-md focus:outline-none focus:ring-1 focus:ring-[#3498db]">
+                                                </div>
+                                                <div class="flex gap-2 justify-end mt-2">
+                                                    <button type="submit" name="update_inventory" class="px-3 py-1 bg-[#2ecc71] text-white rounded-md hover:bg-[#27ae60] transition text-sm">Save</button>
+                                                    <button type="button" onclick="document.getElementById('editForm-<?php echo $item['part_id']; ?>').classList.add('hidden')" class="px-3 py-1 bg-[#e74c3c] text-white rounded-md hover:bg-[#c0392b] transition text-sm">Cancel</button>
                                                 </div>
                                             </form>
                                         </div>
-                                        <div class="flex gap-4">
-                                            <button onclick="document.getElementById('editForm-<?php echo $item['id']; ?>').classList.toggle('hidden')" class="px-4 py-2 bg-[#2ecc71] text-white rounded-md hover:bg-[#27ae60] transition action-btn">Edit</button>
-                                            <form method="post">
-                                                <input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
-                                                <button type="submit" name="delete_product" class="px-4 py-2 bg-[#e74c3c] text-white rounded-md hover:bg-[#c0392b] transition delete-btn" onclick="return confirm('Are you sure you want to delete this product?')">Delete</button>
+                                        <div class="flex gap-2">
+                                            <button onclick="document.getElementById('editForm-<?php echo $item['part_id']; ?>').classList.toggle('hidden')" class="px-3 py-1 bg-[#2ecc71] text-white rounded-md hover:bg-[#27ae60] transition action-btn text-sm">Edit</button>
+                                            <form method="post" class="inline">
+                                                <input type="hidden" name="part_id" value="<?php echo $item['part_id']; ?>">
+                                                <button type="submit" name="delete_product" class="px-3 py-1 bg-[#e74c3c] text-white rounded-md hover:bg-[#c0392b] transition delete-btn text-sm" onclick="return confirm('Are you sure you want to delete this part?')">Delete</button>
                                             </form>
                                         </div>
                                     </td>

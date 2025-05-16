@@ -3,41 +3,109 @@
 session_start();
 
 // Check if the user is logged in and has the correct role
-if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || $_SESSION["role"] !== 'warehouse') {
+if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || !in_array($_SESSION["role"], ['customer'])) {
     session_unset();
     session_destroy();
-    header("location: Retail System-Warehouse-Login.php?error=unauthorized_access");
+    header("location: ../Retail System-Warehouse-Login.php?error=unauthorized_access");
     exit;
 }
 
 // Include database connection
-require_once 'db_connection.php';
+require_once '../db_connection.php';
 
 $conn = connectionToDatabase();
 
-// Fetch inventory data
-$stmt = $conn->prepare("SELECT part_id, part_name, quantity, unit_price FROM inventory WHERE warehouse_id = ?");
-$stmt->bind_param("i", $_SESSION['warehouse_id']);
+// Initialize variables
+$first_name = $last_name = $phone = '';
+$first_name_err = $last_name_err = $phone_err = $password_err = $confirm_password_err = '';
+$success = isset($_SESSION['success']) ? $_SESSION['success'] : '';
+$error = isset($_SESSION['error']) ? $_SESSION['error'] : '';
+
+// Fetch current user details
+$stmt = $conn->prepare("SELECT first_name, last_name, phone FROM users WHERE id = ?");
+$stmt->bind_param("i", $_SESSION['id']);
 $stmt->execute();
 $result = $stmt->get_result();
-$inventory = $result->fetch_all(MYSQLI_ASSOC);
+$user = $result->fetch_assoc();
 $stmt->close();
 
-// Fetch pending dispatch orders
-$stmt = $conn->prepare("SELECT order_id, customer_id, part_id, quantity, status, order_date FROM dispatch_orders WHERE status = 'pending' AND warehouse_id = ?");
-$stmt->bind_param("i", $_SESSION['warehouse_id']);
-$stmt->execute();
-$result = $stmt->get_result();
-$dispatchOrders = $result->fetch_all(MYSQLI_ASSOC);
-$stmt->close();
+$first_name = $user['first_name'] ?: '';
+$last_name = $user['last_name'] ?: '';
+$phone = $user['phone'] ?: '';
 
-// Fetch recent activity logs
-$stmt = $conn->prepare("SELECT action, details, timestamp FROM activity_logs WHERE warehouse_id = ? ORDER BY timestamp DESC LIMIT 10");
-$stmt->bind_param("i", $_SESSION['warehouse_id']);
-$stmt->execute();
-$result = $stmt->get_result();
-$activityLogs = $result->fetch_all(MYSQLI_ASSOC);
-$stmt->close();
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Validate first name
+    $first_name = trim($_POST['first_name']);
+    if (empty($first_name)) {
+        $first_name_err = "Please enter your first name.";
+    } elseif (!preg_match("/^[a-zA-Z ]*$/", $first_name)) {
+        $first_name_err = "First name can only contain letters and spaces.";
+    }
+
+    // Validate last name
+    $last_name = trim($_POST['last_name']);
+    if (empty($last_name)) {
+        $last_name_err = "Please enter your last name.";
+    } elseif (!preg_match("/^[a-zA-Z ]*$/", $last_name)) {
+        $last_name_err = "Last name can only contain letters and spaces.";
+    }
+
+    // Validate phone
+    $phone = trim($_POST['phone']);
+    if (empty($phone)) {
+        $phone_err = "Please enter your phone number.";
+    } elseif (!preg_match("/^[0-9]{9,12}$/", $phone)) {
+        $phone_err = "Phone number must be 9-12 digits.";
+    }
+
+    // Validate password
+    $password = trim($_POST['password']);
+    $confirm_password = trim($_POST['confirm_password']);
+    if (!empty($password)) {
+        if (strlen($password) < 8) {
+            $password_err = "Password must be at least 8 characters.";
+        } elseif ($password !== $confirm_password) {
+            $confirm_password_err = "Passwords do not match.";
+        }
+    }
+
+    // If no errors, update user
+    if (empty($first_name_err) && empty($last_name_err) && empty($phone_err) && empty($password_err) && empty($confirm_password_err)) {
+        $sql = "UPDATE users SET first_name = ?, last_name = ?, phone = ?";
+        $params = [$first_name, $last_name, $phone];
+        $types = "sss";
+
+        if (!empty($password)) {
+            $sql .= ", password = ?";
+            $params[] = password_hash($password, PASSWORD_BCRYPT);
+            $types .= "s";
+        }
+
+        $sql .= " WHERE id = ?";
+        $params[] = $_SESSION['id'];
+        $types .= "i";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+
+        if ($stmt->execute()) {
+            // Log activity
+            $stmt = $conn->prepare("INSERT INTO activity_logs (warehouse_id, action, details) VALUES (?, 'Profile Updated', ?)");
+            $details = "User {$_SESSION['email']} updated profile (first_name: $first_name, last_name: $last_name, phone: $phone" . (!empty($password) ? ", password changed" : "") . ")";
+            $stmt->bind_param("is", $_SESSION['warehouse_id'], $details);
+            $stmt->execute();
+            $stmt->close();
+
+            $_SESSION['success'] = "Profile updated successfully.";
+        } else {
+            $_SESSION['error'] = "Failed to update profile.";
+        }
+        $stmt->close();
+        $conn->close();
+        header("location: settings.php");
+        exit;
+    }
+}
 
 $conn->close();
 ?>
@@ -47,13 +115,13 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZedAuto - Warehouse Dashboard</title>
+    <title>ZedAuto - Warehouse Settings</title>
     <!-- Favicon -->
-    <link rel="icon" type="image/ico" href="favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="./Static/images/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="./Static/images/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
+    <link rel="icon" type="image/ico" href="../favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../Static/images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../Static/images/favicon-16x16.png">
+    <link rel="manifest" href="../site.webmanifest">
     <!-- Tailwind CSS CDN -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <!-- Font Awesome CDN -->
@@ -61,7 +129,7 @@ $conn->close();
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../style.css">
     <style>
         body {
             margin: 0;
@@ -75,7 +143,7 @@ $conn->close();
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 0 20px;
         }
@@ -158,7 +226,7 @@ $conn->close();
         .navbar .search-button {
             padding: 8px 15px;
             background: #ffcc00;
-            color: #2c2f33;
+            color: #2c3e50;
             border: none;
             border-radius: 0 4px 4px 0;
             font-size: 14px;
@@ -216,13 +284,13 @@ $conn->close();
             color: #f1c40f;
         }
 
-        /* Dashboard Sections */
-        .dashboard-section {
+        /* Settings Section */
+        .settings-section {
             padding: 40px 0;
             background: #fff;
         }
 
-        .dashboard-section h2 {
+        .settings-section h2 {
             font-size: 28px;
             font-weight: 700;
             text-align: center;
@@ -230,51 +298,57 @@ $conn->close();
             color: #2c3e50;
         }
 
-        .table-container {
-            overflow-x: auto;
-            margin-bottom: 30px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
+        .form-container {
             background: #f9f9f9;
+            padding: 20px;
             border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            max-width: 600px;
+            margin: 0 auto;
         }
 
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ecf0f1;
+        .form-container input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
 
-        th {
+        .form-container button {
             background: #2c3e50;
-            color: #ffffff;
-            font-weight: 600;
-        }
-
-        tr:hover {
-            background: #ecf0f1;
-        }
-
-        .action-btn {
-            padding: 8px 16px;
+            color: #fff;
+            padding: 10px 20px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 14px;
-            transition: background 0.3s ease;
+            width: 100%;
         }
 
-        .dispatch-btn {
+        .form-container button:hover {
+            background: #34495e;
+        }
+
+        .error {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .alert {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .alert-success {
             background: #2ecc71;
             color: #fff;
         }
 
-        .dispatch-btn:hover {
-            background: #27ae60;
+        .alert-error {
+            background: #e74c3c;
+            color: #fff;
         }
 
         /* Footer */
@@ -379,12 +453,8 @@ $conn->close();
                 gap: 10px;
             }
 
-            .table-container {
-                font-size: 14px;
-            }
-
-            th, td {
-                padding: 8px;
+            .form-container {
+                padding: 15px;
             }
         }
 
@@ -397,21 +467,16 @@ $conn->close();
                 font-size: 20px;
             }
 
-            .dashboard-section h2 {
+            .settings-section h2 {
                 font-size: 24px;
             }
 
-            .table-container {
-                font-size: 12px;
+            .form-container input {
+                font-size: 14px;
             }
 
-            th, td {
-                padding: 6px;
-            }
-
-            .action-btn {
-                padding: 6px 12px;
-                font-size: 12px;
+            .form-container button {
+                font-size: 14px;
             }
         }
     </style>
@@ -419,106 +484,90 @@ $conn->close();
 <body>
     <header class="navbar">
         <div class="container">
-            <a href="RetailSytsem-Home.html" class="logo">ZedAuto</a>
+            <a href="../RetailSytsem-Home.html" class="logo">ZedAuto</a>
             <div class="hamburger">
                 <i class="fas fa-bars"></i>
             </div>
             <nav class="main-nav">
                 <ul>
+                    <li><a href="../RetailSytsem-Home.html">HOME</a></li>
+                    <li><a href="../maintenance.php">MAINTENANCE</a></li>
+                    <li><a href="../auto-repair.php">AUTO REPAIR</a></li>
+                    <li><a href="#">PRICE LIST</a></li>
+                    <li><a href="#">REVIEWS</a></li>
+                    <li><a href="../about.php">ABOUT</a></li>
+                    <li><a href="../contact.php">CONTACT</a></li>
+                    <li><a href="dashboard.php">DASHBOARD</a></li>
+                    <li><a href="profile.php">PROFILE</a></li>
+                    <li><a href="settings.php" class="text-yellow-400 hover:text-yellow-500">SETTINGS</a></li>
+                    <li>
                         <div class="search-container">
                             <input type="text" class="search" placeholder="Search...">
                             <button type="submit" class="search-button">SEARCH</button>
                         </div>
                     </li>
-                    <li><a href="logout.php" class="text-red-400 hover:text-red-500">LOGOUT</a></li>
+                    <li><a href="../logout.php" class="text-red-400 hover:text-red-500">LOGOUT</a></li>
                 </ul>
             </nav>
+        </div>
+        <div class="sub-header">
+            <div class="container">
+                <div class="contact-info">
+                    <div><i class="fas fa-map-marker-alt"></i> Lusaka, Zambia</div>
+                    <div><i class="fas fa-phone"></i> + (260) 987654321</div>
+                    <div><i class="fas fa-envelope"></i> <a href="mailto:info@zedauto.com">info@zedauto.com</a></div>
+                </div>
+                <div class="quick-links">
+                    <a href="../sell.html">Sell Car</a>
+                    <a href="../RetailSystem-LocalGarage-Login.php">Buy Car</a>
+                    <a href="../RetailSystem-Signup.php">Order Parts</a>
+                </div>
+            </div>
         </div>
     </header>
 
     <main class="flex-1">
-        <section class="dashboard-section">
+        <section class="settings-section">
             <div class="container">
-                <h2>Welcome, <?php echo htmlspecialchars($_SESSION['email']); ?>!</h2>
-                <div class="table-container">
-                    <h3 class="text-2xl font-semibold mb-4">Current Inventory</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Part ID</th>
-                                <th>Part Name</th>
-                                <th>Quantity</th>
-                                <th>Price (ZMW)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($inventory as $item): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($item['part_id']); ?></td>
-                                    <td><?php echo htmlspecialchars($item['part_name']); ?></td>
-                                    <td><?php echo htmlspecialchars($item['quantity']); ?></td>
-                                    <td><?php echo number_format($item['unit_price'], 2); ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
+                <h2>Account Settings</h2>
 
-                <div class="table-container">
-                    <h3 class="text-2xl font-semibold mb-4">Pending Dispatch Orders</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Order ID</th>
-                                <th>Customer ID</th>
-                                <th>Part ID</th>
-                                <th>Quantity</th>
-                                <th>Status</th>
-                                <th>Order Date</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($dispatchOrders as $order): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($order['order_id']); ?></td>
-                                    <td><?php echo htmlspecialchars($order['customer_id']); ?></td>
-                                    <td><?php echo htmlspecialchars($order['part_id']); ?></td>
-                                    <td><?php echo htmlspecialchars($order['quantity']); ?></td>
-                                    <td><?php echo htmlspecialchars($order['status']); ?></td>
-                                    <td><?php echo htmlspecialchars($order['order_date']); ?></td>
-                                    <td>
-                                        <form action="dispatch_order.php" method="post">
-                                            <input type="hidden" name="order_id" value="<?php echo $order['order_id']; ?>">
-                                            <button type="submit" class="action-btn dispatch-btn">Dispatch</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
+                <!-- Display Success/Error Messages -->
+                <?php if ($success): ?>
+                    <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
+                <?php endif; ?>
+                <?php if ($error): ?>
+                    <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
+                <?php endif; ?>
 
-                <div class="table-container">
-                    <h3 class="text-2xl font-semibold mb-4">Recent Activity Logs</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Action</th>
-                                <th>Details</th>
-                                <th>Timestamp</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($activityLogs as $log): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($log['action']); ?></td>
-                                    <td><?php echo htmlspecialchars($log['details']); ?></td>
-                                    <td><?php echo htmlspecialchars($log['timestamp']); ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                <div class="form-container">
+                    <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+                        <div>
+                            <label for="first_name">First Name</label>
+                            <input type="text" id="first_name" name="first_name" value="<?php echo htmlspecialchars($first_name); ?>">
+                            <span class="error"><?php echo $first_name_err; ?></span>
+                        </div>
+                        <div>
+                            <label for="last_name">Last Name</label>
+                            <input type="text" id="last_name" name="last_name" value="<?php echo htmlspecialchars($last_name); ?>">
+                            <span class="error"><?php echo $last_name_err; ?></span>
+                        </div>
+                        <div>
+                            <label for="phone">Phone Number</label>
+                            <input type="text" id="phone" name="phone" value="<?php echo htmlspecialchars($phone); ?>">
+                            <span class="error"><?php echo $phone_err; ?></span>
+                        </div>
+                        <div>
+                            <label for="password">New Password (leave blank to keep current)</label>
+                            <input type="password" id="password" name="password">
+                            <span class="error"><?php echo $password_err; ?></span>
+                        </div>
+                        <div>
+                            <label for="confirm_password">Confirm Password</label>
+                            <input type="password" id="confirm_password" name="confirm_password">
+                            <span class="error"><?php echo $confirm_password_err; ?></span>
+                        </div>
+                        <button type="submit">Update Settings</button>
+                    </form>
                 </div>
             </div>
         </section>
@@ -534,10 +583,10 @@ $conn->close();
                 <div>
                     <h3>Quick Links</h3>
                     <ul>
-                        <li><a href="RetailSytsem-Home.html">Home</a></li>
-                        <li><a href="about.php">About Us</a></li>
+                        <li><a href="../RetailSytsem-Home.html">Home</a></li>
+                        <li><a href="../about.php">About Us</a></li>
                         <li><a href="#">Services</a></li>
-                        <li><a href="contact.php">Contact</a></li>
+                        <li><a href="../contact.php">Contact</a></li>
                         <li><a href="#">Privacy Policy</a></li>
                     </ul>
                 </div>

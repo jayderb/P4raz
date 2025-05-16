@@ -2,44 +2,61 @@
 // Initialize the session
 session_start();
 
-// Check if the user is logged in and has the correct role
-if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || $_SESSION["role"] !== 'warehouse') {
+// Check if the user is logged in and has the correct access
+if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || 
+    ($_SESSION["role"] !== 'warehouse' || $_SESSION["email"] !== 'warehouse2@zedauto.com') && $_SESSION["role"] !== 'manager') {
     session_unset();
     session_destroy();
-    header("location: Retail System-Warehouse-Login.php?error=unauthorized_access");
+    header("location: ../Retail System-Warehouse-Login.php?error=unauthorized_access");
     exit;
 }
 
 // Include database connection
-require_once 'db_connection.php';
+require_once '../db_connection.php';
 
 $conn = connectionToDatabase();
 
-// Fetch inventory data
-$stmt = $conn->prepare("SELECT part_id, part_name, quantity, unit_price FROM inventory WHERE warehouse_id = ?");
-$stmt->bind_param("i", $_SESSION['warehouse_id']);
+// Hardcode warehouse_id for this dashboard
+$warehouse_id = 2;
+
+// Fetch inventory data for warehouse_id = 2
+$stmt = $conn->prepare("SELECT part_id, part_name, quantity, unit_price 
+                        FROM inventory 
+                        WHERE warehouse_id = ?");
+$stmt->bind_param("i", $warehouse_id);
 $stmt->execute();
 $result = $stmt->get_result();
 $inventory = $result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
-// Fetch pending dispatch orders
-$stmt = $conn->prepare("SELECT order_id, customer_id, part_id, quantity, status, order_date FROM dispatch_orders WHERE status = 'pending' AND warehouse_id = ?");
-$stmt->bind_param("i", $_SESSION['warehouse_id']);
+// Fetch pending dispatch orders for warehouse_id = 2
+$stmt = $conn->prepare("SELECT do.order_id, do.customer_id, do.part_id, i.part_name, do.quantity, do.status, do.order_date 
+                        FROM dispatch_orders do 
+                        LEFT JOIN inventory i ON do.part_id = i.part_id AND do.warehouse_id = i.warehouse_id 
+                        WHERE do.warehouse_id = ? AND do.status = 'pending'");
+$stmt->bind_param("i", $warehouse_id);
 $stmt->execute();
 $result = $stmt->get_result();
 $dispatchOrders = $result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
-// Fetch recent activity logs
-$stmt = $conn->prepare("SELECT action, details, timestamp FROM activity_logs WHERE warehouse_id = ? ORDER BY timestamp DESC LIMIT 10");
-$stmt->bind_param("i", $_SESSION['warehouse_id']);
+// Fetch recent activity logs for warehouse_id = 2
+$stmt = $conn->prepare("SELECT log_id, action, details, timestamp 
+                        FROM activity_logs 
+                        WHERE warehouse_id = ? 
+                        ORDER BY timestamp DESC LIMIT 20");
+$stmt->bind_param("i", $warehouse_id);
 $stmt->execute();
 $result = $stmt->get_result();
 $activityLogs = $result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
 $conn->close();
+
+// Display success/error messages
+$success = isset($_SESSION['success']) ? $_SESSION['success'] : '';
+$error = isset($_SESSION['error']) ? $_SESSION['error'] : '';
+unset($_SESSION['success'], $_SESSION['error']);
 ?>
 
 <!DOCTYPE html>
@@ -47,13 +64,13 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZedAuto - Warehouse Dashboard</title>
+    <title>ZedAuto - Warehouse 2 Dashboard</title>
     <!-- Favicon -->
-    <link rel="icon" type="image/ico" href="favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="./Static/images/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="./Static/images/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
+    <link rel="icon" type="image/ico" href="../favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../Static/images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../Static/images/favicon-16x16.png">
+    <link rel="manifest" href="../site.webmanifest">
     <!-- Tailwind CSS CDN -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <!-- Font Awesome CDN -->
@@ -61,7 +78,7 @@ $conn->close();
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../style.css">
     <style>
         body {
             margin: 0;
@@ -75,7 +92,7 @@ $conn->close();
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 0 20px;
         }
@@ -277,6 +294,22 @@ $conn->close();
             background: #27ae60;
         }
 
+        .alert {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .alert-success {
+            background: #2ecc71;
+            color: #fff;
+        }
+
+        .alert-error {
+            background: #e74c3c;
+            color: #fff;
+        }
+
         /* Footer */
         footer {
             background: #2c3e50;
@@ -419,29 +452,61 @@ $conn->close();
 <body>
     <header class="navbar">
         <div class="container">
-            <a href="RetailSytsem-Home.html" class="logo">ZedAuto</a>
+            <a href="../RetailSytsem-Home.html" class="logo">ZedAuto</a>
             <div class="hamburger">
                 <i class="fas fa-bars"></i>
             </div>
             <nav class="main-nav">
                 <ul>
+                    <li><a href="../RetailSytsem-Home.html">HOME</a></li>
+                    <li><a href="../maintenance.php">MAINTENANCE</a></li>
+                    <li><a href="../auto-repair.php">AUTO REPAIR</a></li>
+                    <li><a href="#">PRICE LIST</a></li>
+                    <li><a href="#">REVIEWS</a></li>
+                    <li><a href="../about.php">ABOUT</a></li>
+                    <li><a href="../contact.php">CONTACT</a></li>
+                    <li>
                         <div class="search-container">
                             <input type="text" class="search" placeholder="Search...">
                             <button type="submit" class="search-button">SEARCH</button>
                         </div>
                     </li>
-                    <li><a href="logout.php" class="text-red-400 hover:text-red-500">LOGOUT</a></li>
+                    <li><a href="../logout.php" class="text-red-400 hover:text-red-500">LOGOUT</a></li>
                 </ul>
             </nav>
+        </div>
+        <div class="sub-header">
+            <div class="container">
+                <div class="contact-info">
+                    <div><i class="fas fa-map-marker-alt"></i> Lusaka, Zambia</div>
+                    <div><i class="fas fa-phone"></i> + (260) 987654321</div>
+                    <div><i class="fas fa-envelope"></i> <a href="mailto:info@zedauto.com">info@zedauto.com</a></div>
+                </div>
+                <div class="quick-links">
+                    <a href="../sell.html">Sell Car</a>
+                    <a href="../RetailSystem-LocalGarage-Login.php">Buy Car</a>
+                    <a href="../RetailSystem-Signup.php">Order Parts</a>
+                </div>
+            </div>
         </div>
     </header>
 
     <main class="flex-1">
         <section class="dashboard-section">
             <div class="container">
-                <h2>Welcome, <?php echo htmlspecialchars($_SESSION['email']); ?>!</h2>
+                <h2>Welcome, Warehouse 2 Manager!</h2>
+
+                <!-- Display Success/Error Messages -->
+                <?php if ($success): ?>
+                    <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
+                <?php endif; ?>
+                <?php if ($error): ?>
+                    <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
+                <?php endif; ?>
+
+                <!-- Inventory -->
                 <div class="table-container">
-                    <h3 class="text-2xl font-semibold mb-4">Current Inventory</h3>
+                    <h3 class="text-2xl font-semibold mb-4">Inventory (Warehouse 2)</h3>
                     <table>
                         <thead>
                             <tr>
@@ -464,14 +529,16 @@ $conn->close();
                     </table>
                 </div>
 
+                <!-- Pending Dispatch Orders -->
                 <div class="table-container">
-                    <h3 class="text-2xl font-semibold mb-4">Pending Dispatch Orders</h3>
+                    <h3 class="text-2xl font-semibold mb-4">Pending Dispatch Orders (Warehouse 2)</h3>
                     <table>
                         <thead>
                             <tr>
                                 <th>Order ID</th>
                                 <th>Customer ID</th>
                                 <th>Part ID</th>
+                                <th>Part Name</th>
                                 <th>Quantity</th>
                                 <th>Status</th>
                                 <th>Order Date</th>
@@ -484,11 +551,12 @@ $conn->close();
                                     <td><?php echo htmlspecialchars($order['order_id']); ?></td>
                                     <td><?php echo htmlspecialchars($order['customer_id']); ?></td>
                                     <td><?php echo htmlspecialchars($order['part_id']); ?></td>
+                                    <td><?php echo htmlspecialchars($order['part_name'] ?: 'N/A'); ?></td>
                                     <td><?php echo htmlspecialchars($order['quantity']); ?></td>
                                     <td><?php echo htmlspecialchars($order['status']); ?></td>
                                     <td><?php echo htmlspecialchars($order['order_date']); ?></td>
                                     <td>
-                                        <form action="dispatch_order.php" method="post">
+                                        <form action="../dispatch_order.php" method="post">
                                             <input type="hidden" name="order_id" value="<?php echo $order['order_id']; ?>">
                                             <button type="submit" class="action-btn dispatch-btn">Dispatch</button>
                                         </form>
@@ -499,11 +567,13 @@ $conn->close();
                     </table>
                 </div>
 
+                <!-- Activity Logs -->
                 <div class="table-container">
-                    <h3 class="text-2xl font-semibold mb-4">Recent Activity Logs</h3>
+                    <h3 class="text-2xl font-semibold mb-4">Recent Activity Logs (Warehouse 2)</h3>
                     <table>
                         <thead>
                             <tr>
+                                <th>Log ID</th>
                                 <th>Action</th>
                                 <th>Details</th>
                                 <th>Timestamp</th>
@@ -512,6 +582,7 @@ $conn->close();
                         <tbody>
                             <?php foreach ($activityLogs as $log): ?>
                                 <tr>
+                                    <td><?php echo htmlspecialchars($log['log_id']); ?></td>
                                     <td><?php echo htmlspecialchars($log['action']); ?></td>
                                     <td><?php echo htmlspecialchars($log['details']); ?></td>
                                     <td><?php echo htmlspecialchars($log['timestamp']); ?></td>
@@ -534,16 +605,16 @@ $conn->close();
                 <div>
                     <h3>Quick Links</h3>
                     <ul>
-                        <li><a href="RetailSytsem-Home.html">Home</a></li>
-                        <li><a href="about.php">About Us</a></li>
+                        <li><a href="../RetailSytsem-Home.html">Home</a></li>
+                        <li><a href="../about.php">About Us</a></li>
                         <li><a href="#">Services</a></li>
-                        <li><a href="contact.php">Contact</a></li>
+                        <li><a href="../contact.php">Contact</a></li>
                         <li><a href="#">Privacy Policy</a></li>
                     </ul>
                 </div>
                 <div>
                     <h3>Connect With Us</h3>
-                    <div class="social-links">
+                    <div class="cla social-links">
                         <a href="#"><i class="fab fa-facebook-f"></i></a>
                         <a href="#"><i class="fab fa-twitter"></i></a>
                         <a href="#"><i class="fab fa-instagram"></i></a>
