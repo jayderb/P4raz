@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 15, 2025 at 09:47 PM
+-- Generation Time: May 17, 2025 at 02:55 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -34,6 +34,25 @@ CREATE TABLE `activity_logs` (
   `details` text NOT NULL,
   `timestamp` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `activity_logs`
+--
+
+INSERT INTO `activity_logs` (`log_id`, `warehouse_id`, `action`, `details`, `timestamp`) VALUES
+(1, 1, 'Stock Updated', 'Added 100 Brake Pads to inventory', '2025-05-16 20:51:11'),
+(2, 1, 'Order Received', 'Order ID 1 placed for 10 Brake Pads', '2025-05-16 20:51:11'),
+(3, 1, 'Order Dispatched', 'Order ID 1 dispatched', '2025-05-16 20:58:23'),
+(4, 1, 'Order Dispatched', 'Order ID 2 dispatched', '2025-05-16 21:00:01'),
+(5, 1, 'Order Dispatched', 'Order ID 4 dispatched', '2025-05-16 21:01:43'),
+(6, 1, 'Order Dispatched', 'Order ID 3 dispatched', '2025-05-16 21:03:02'),
+(7, 1, 'Stock Added', 'Added 30 Muffler (Part ID: 4) to warehouse 1', '2025-05-16 21:52:09'),
+(8, 1, 'Stock Added', 'Added 50 Toyota Runx Engine (Part ID: 5) to warehouse 1', '2025-05-16 23:53:22'),
+(9, 1, 'Stock Added', 'Added 50 Toyota Runx Engine (Part ID: 6) to warehouse 1', '2025-05-16 23:54:15'),
+(10, 1, 'Stock Added', 'Added 50 Toyota Runx Engine (Part ID: 7) to warehouse 1', '2025-05-16 23:54:43'),
+(11, 1, 'Stock Added', 'Added 50 Toyota Runx Engine (Part ID: 8) to warehouse 1', '2025-05-16 23:55:18'),
+(12, 1, 'Order Added', 'Order for 5 of Part ID 5 for customer 33 in warehouse 1', '2025-05-17 00:15:38'),
+(13, 1, 'Order Dispatched', 'Order ID 5 dispatched', '2025-05-17 00:19:34');
 
 -- --------------------------------------------------------
 
@@ -95,8 +114,11 @@ CREATE TABLE `dispatch_orders` (
 --
 
 INSERT INTO `dispatch_orders` (`order_id`, `warehouse_id`, `customer_id`, `part_id`, `quantity`, `status`, `order_date`) VALUES
-(1, 1, 1, 1, 5, 'pending', '2025-05-15 09:17:48'),
-(2, 1, 1, 2, 3, 'pending', '2025-05-15 09:17:48');
+(1, 1, 1, 1, 5, 'dispatched', '2025-05-15 09:17:48'),
+(2, 1, 1, 2, 3, 'dispatched', '2025-05-15 09:17:48'),
+(3, 1, 1, 1, 10, 'dispatched', '2025-05-16 20:50:21'),
+(4, 1, 1, 2, 5, 'dispatched', '2025-05-16 20:50:21'),
+(5, 1, 33, 5, 5, 'dispatched', '2025-05-17 00:15:38');
 
 -- --------------------------------------------------------
 
@@ -138,7 +160,9 @@ CREATE TABLE `inventory` (
 INSERT INTO `inventory` (`part_id`, `warehouse_id`, `part_name`, `description`, `category`, `quantity`, `unit_price`, `reorder_level`, `supplier_id`, `last_updated`) VALUES
 (1, 1, 'Oil Filter', NULL, NULL, 50, 74.99, 10, NULL, '2025-05-15 09:17:21'),
 (2, 1, 'Brake Pads', NULL, NULL, 30, 149.99, 5, NULL, '2025-05-15 09:17:21'),
-(3, 1, 'Car Battery', NULL, NULL, 20, 249.99, 8, NULL, '2025-05-15 09:17:21');
+(3, 1, 'Car Battery', NULL, NULL, 20, 249.99, 8, NULL, '2025-05-15 09:17:21'),
+(4, 1, 'Muffler', NULL, NULL, 30, 850.00, 0, NULL, '2025-05-16 21:52:09'),
+(5, 1, 'Toyota Runx Engine', NULL, NULL, 45, 5200.00, 0, NULL, '2025-05-17 00:15:38');
 
 -- --------------------------------------------------------
 
@@ -311,11 +335,11 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`id`, `name`, `price`, `stock`, `created_at`) VALUES
-(1, 'Oil Filter', 74.99, 22, '2025-05-01 21:50:20'),
-(2, 'Brake Pads', 149.99, 12, '2025-05-01 21:50:20'),
-(3, 'Car Battery', 249.99, 1, '2025-05-01 21:50:20'),
-(4, 'Tire', 849.99, 27, '2025-05-01 21:50:20'),
-(5, 'Spark plugs', 100.00, 69, '2025-05-06 13:39:27');
+(1, 'Oil Filter', 74.99, 17, '2025-05-01 21:50:20'),
+(2, 'Brake Pads', 100.00, 9, '2025-05-01 21:50:20'),
+(3, 'Car Battery', 249.99, 19, '2025-05-01 21:50:20'),
+(4, 'Tire', 849.99, 18, '2025-05-01 21:50:20'),
+(5, 'Spark plugs', 100.00, 52, '2025-05-06 13:39:27');
 
 -- --------------------------------------------------------
 
@@ -336,7 +360,8 @@ CREATE TABLE `reviews` (
 --
 
 INSERT INTO `reviews` (`id`, `customer_id`, `rating`, `comment`, `created_at`) VALUES
-(1, 20, 5, 'Good Service but shipping took time.', '2025-05-15 15:36:27');
+(1, 20, 5, 'Good Service but shipping took time.', '2025-05-15 15:36:27'),
+(2, 20, 5, 'Great Service', '2025-05-15 20:05:01');
 
 -- --------------------------------------------------------
 
@@ -401,12 +426,32 @@ INSERT INTO `sales` (`id`, `employee_id`, `total`, `sale_date`, `status`, `custo
 (4, 1, 2774.91, '2025-05-01 23:03:14', 'delivered', NULL, NULL),
 (7, 9, 3074.81, '2025-05-02 15:13:05', 'delivered', NULL, NULL),
 (8, 9, 3449.92, '2025-05-04 22:47:05', 'delivered', NULL, NULL),
-(9, 2, 234.56, '2025-05-09 23:36:00', 'pending', NULL, NULL),
-(11, NULL, 5000.00, '2025-05-06 14:24:37', 'pending', NULL, NULL),
-(12, NULL, 20000.00, '2025-05-06 14:32:49', 'pending', NULL, NULL),
-(13, 9, 1274.97, '2025-05-07 12:44:01', 'pending', 1, NULL),
-(14, 9, 13349.70, '2025-05-07 14:45:45', 'pending', 1, NULL),
-(15, NULL, 3149.88, '2025-05-15 15:40:42', 'pending', 20, NULL);
+(9, 21, 234.56, '2025-05-09 23:36:00', 'delivered', NULL, NULL),
+(11, NULL, 5000.00, '2025-05-06 14:24:37', 'delivered', NULL, NULL),
+(12, NULL, 20000.00, '2025-05-06 14:32:49', 'delivered', NULL, NULL),
+(13, 9, 1274.97, '2025-05-07 12:44:01', 'delivered', 1, NULL),
+(14, 9, 13349.70, '2025-05-07 14:45:45', 'delivered', 1, NULL),
+(15, 21, 2000.00, '2025-05-15 15:40:42', 'delivered', 20, NULL),
+(16, NULL, 149.99, '2025-05-15 20:33:07', 'delivered', 20, NULL),
+(17, NULL, 8474.80, '2025-05-16 12:17:31', 'delivered', 30, NULL),
+(18, 21, 1200.00, '2025-05-16 15:18:26', 'delivered', 20, NULL),
+(19, 0, 425.11, '2025-05-16 16:28:25', 'delivered', 20, NULL),
+(20, 21, 1924.89, '2025-05-16 21:04:04', 'delivered', 20, NULL),
+(21, 21, 1000.00, '2025-05-16 21:05:19', 'delivered', 20, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sales_cars`
+--
+
+CREATE TABLE `sales_cars` (
+  `id` int(11) NOT NULL,
+  `sale_id` int(11) NOT NULL,
+  `car_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `price` decimal(10,2) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -455,7 +500,18 @@ INSERT INTO `sales_items` (`id`, `sale_id`, `product_id`, `quantity`, `price`) V
 (26, 15, 1, 10, 74.99),
 (27, 15, 2, 1, 149.99),
 (28, 15, 3, 1, 249.99),
-(29, 15, 5, 20, 100.00);
+(29, 15, 5, 20, 100.00),
+(30, 16, 2, 1, 149.99),
+(31, 17, 1, 11, 74.99),
+(32, 17, 4, 9, 849.99),
+(33, 18, 1, 9, 74.99),
+(34, 18, 5, 6, 100.00),
+(35, 19, 1, 1, 74.99),
+(36, 19, 2, 1, 100.00),
+(37, 19, 3, 1, 249.99),
+(38, 20, 1, 11, 74.99),
+(39, 20, 5, 11, 100.00),
+(40, 21, 2, 10, 100.00);
 
 -- --------------------------------------------------------
 
@@ -469,24 +525,28 @@ CREATE TABLE `users` (
   `password` varchar(255) NOT NULL,
   `first_name` varchar(100) NOT NULL,
   `last_name` varchar(100) NOT NULL,
-  `role` enum('customer','sales','manager','customs','warehouse') DEFAULT NULL,
+  `role` enum('customer','sales','manager','customs','warehouse','admin') DEFAULT NULL,
   `warehouse_id` int(11) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `last_login` timestamp NULL DEFAULT NULL,
-  `phone` varchar(20) NOT NULL
+  `phone` varchar(20) NOT NULL,
+  `receive_notifications` tinyint(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `email`, `password`, `first_name`, `last_name`, `role`, `warehouse_id`, `created_at`, `last_login`, `phone`) VALUES
-(1, 'jaykalobwe18@gmail.com', '$2y$10$MrJWkORbQgkwEyrR2Aw9bukxggno4TcPYQe7BlwmTSykPTcfVl.bO', 'John', 'Doe', 'customer', 0, '2025-04-29 13:34:01', '2025-05-04 22:27:11', '972483388'),
-(13, 'customs@zedauto.com', '$2y$10$3y4dGxbCgctYVC5Z0YXptu8KSOCD6USVK4xO2EnPSxyfR0n9fB9t6', 'Eu', 'Customs', 'customs', 0, '2025-05-04 23:22:20', NULL, '0987654321'),
-(14, 'warehouse@zedauto.com', '$2y$10$Ar6n8K0GEp.LVu/M/lfKkO5SPthx2jWgCCRxM9IB5J2PmkH76gQ1y', 'Warehouse', 'User', 'warehouse', 1, '2025-05-15 09:16:03', NULL, '123456789'),
-(19, 'manager@zedauto.com', '$2y$10$/Obg.DuZajbNyTu4iZPR2eRMcDguNQ0SAZvw7e7xgCNU/E4OS7cXC', 'Joy', 'Kapinda', 'manager', 0, '2025-05-15 09:41:22', NULL, '123456789'),
-(20, 'customer@zedauto.com', '$2y$10$6ik1FXUZUw48WadJuPw01u4vDM0VGTjEQBpSuLwi21z4C7kRYr8xC', 'Salvio', 'Daka', 'customer', 0, '2025-05-15 09:41:22', NULL, '123456789'),
-(21, 'sales@zedauto.com', '$2y$10$MDReA.m.pla9ypLjXY.m5ewaVJD43gicIWGyAAYO5jD0LvUBIHjR6', 'The', 'Sean', 'sales', 0, '2025-05-15 09:41:22', NULL, '123456789');
+INSERT INTO `users` (`id`, `email`, `password`, `first_name`, `last_name`, `role`, `warehouse_id`, `created_at`, `last_login`, `phone`, `receive_notifications`) VALUES
+(1, 'jaykalobwe18@gmail.com', '$2y$10$MrJWkORbQgkwEyrR2Aw9bukxggno4TcPYQe7BlwmTSykPTcfVl.bO', 'John', 'Doe', 'customer', 0, '2025-04-29 13:34:01', '2025-05-04 22:27:11', '972483388', 1),
+(13, 'customs@zedauto.com', '$2y$10$3y4dGxbCgctYVC5Z0YXptu8KSOCD6USVK4xO2EnPSxyfR0n9fB9t6', 'Eu', 'Customs', 'customs', 0, '2025-05-04 23:22:20', NULL, '0987654321', 1),
+(14, 'warehouse@zedauto.com', '$2y$10$Ar6n8K0GEp.LVu/M/lfKkO5SPthx2jWgCCRxM9IB5J2PmkH76gQ1y', 'Warehouse', 'User', 'warehouse', 1, '2025-05-15 09:16:03', NULL, '123456789', 1),
+(19, 'manager@zedauto.com', '$2y$10$/Obg.DuZajbNyTu4iZPR2eRMcDguNQ0SAZvw7e7xgCNU/E4OS7cXC', 'Joy', 'Kapinda', 'manager', 0, '2025-05-15 09:41:22', NULL, '123456789', 1),
+(20, 'customer@zedauto.com', '$2y$10$6ik1FXUZUw48WadJuPw01u4vDM0VGTjEQBpSuLwi21z4C7kRYr8xC', 'Salvio', 'Daka', 'customer', 0, '2025-05-15 09:41:22', NULL, '1234567890', 1),
+(21, 'sales@zedauto.com', '$2y$10$MDReA.m.pla9ypLjXY.m5ewaVJD43gicIWGyAAYO5jD0LvUBIHjR6', 'The', 'Sean', 'sales', 0, '2025-05-15 09:41:22', NULL, '123456789', 1),
+(30, 'drake@zedauto.com', '$2y$10$FWdao.GR1dURJa/DAnCP1OozfqoUofbG6Pgix6tKdhMc4gAiGxftu', 'Kondwani', 'Nyanga', 'customer', 0, '2025-05-16 11:40:07', NULL, '123456', 1),
+(31, 'warehouse2@zedauto.com', '$2y$10$tPZY4VOiKoJIjKsr6IfG7.5zPG/Wd83hjjyHdRUElUh9q31OjuCCe', 'Warehouse', 'Two', 'warehouse', 2, '2025-05-16 22:06:38', NULL, '123456789', 1),
+(33, 'steven@zedauto.com', '$2y$10$pfIkE.CmuSmaYcaCFcej8ujY9KhKU6LhAFYek6XHWSkhiQ0AWELaS', 'Steven', 'Mwewa', 'customer', 0, '2025-05-17 00:12:30', NULL, '0972483388', 1);
 
 --
 -- Triggers `users`
@@ -630,6 +690,14 @@ ALTER TABLE `sales`
   ADD KEY `fk_customer_id` (`customer_id`);
 
 --
+-- Indexes for table `sales_cars`
+--
+ALTER TABLE `sales_cars`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `sale_id` (`sale_id`),
+  ADD KEY `car_id` (`car_id`);
+
+--
 -- Indexes for table `sales_items`
 --
 ALTER TABLE `sales_items`
@@ -653,7 +721,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `cars`
@@ -665,13 +733,13 @@ ALTER TABLE `cars`
 -- AUTO_INCREMENT for table `dispatch_orders`
 --
 ALTER TABLE `dispatch_orders`
-  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `inventory`
 --
 ALTER TABLE `inventory`
-  MODIFY `part_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `part_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `login_logs`
@@ -719,25 +787,31 @@ ALTER TABLE `products`
 -- AUTO_INCREMENT for table `reviews`
 --
 ALTER TABLE `reviews`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `sales`
 --
 ALTER TABLE `sales`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+
+--
+-- AUTO_INCREMENT for table `sales_cars`
+--
+ALTER TABLE `sales_cars`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `sales_items`
 --
 ALTER TABLE `sales_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- Constraints for dumped tables
@@ -808,6 +882,13 @@ ALTER TABLE `role_permissions`
 ALTER TABLE `sales`
   ADD CONSTRAINT `fk_customer_id` FOREIGN KEY (`customer_id`) REFERENCES `users` (`id`),
   ADD CONSTRAINT `sales_ibfk_2` FOREIGN KEY (`customer_id`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `sales_cars`
+--
+ALTER TABLE `sales_cars`
+  ADD CONSTRAINT `sales_cars_ibfk_1` FOREIGN KEY (`sale_id`) REFERENCES `sales` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `sales_cars_ibfk_2` FOREIGN KEY (`car_id`) REFERENCES `cars` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `sales_items`

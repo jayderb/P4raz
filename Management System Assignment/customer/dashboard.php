@@ -240,14 +240,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_settings'])) {
 
 // Fetch products from the database
 try {
-    $sql = "SELECT id, name, price, stock FROM products WHERE stock > 0";
+    $sql = "SELECT part_id as id, part_name as name, unit_price as price, quantity as stock, 
+                   description, category 
+            FROM inventory 
+            WHERE quantity > 0";
     $stmt = $conn->prepare($sql);
     $stmt->execute();
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    error_log("[" . date('Y-m-d H:i:s') . "] Fetched " . count($products) . " products");
+    error_log("[" . date('Y-m-d H:i:s') . "] Fetched " . count($products) . " inventory items");
 } catch (PDOException $e) {
-    $error_msg = "Error fetching products: " . $e->getMessage();
-    error_log("[" . date('Y-m-d H:i:s') . "] Fetch products error: " . $e->getMessage());
+    $error_msg = "Error fetching inventory: " . $e->getMessage();
+    error_log("[" . date('Y-m-d H:i:s') . "] Fetch inventory error: " . $e->getMessage());
     if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode(['success' => false, 'message' => $error_msg]);
@@ -266,34 +269,48 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_to_cart'])) {
 
     try {
         // Validate product ID and quantity
-        $product_exists = false;
-        $selected_product = null;
-        foreach ($products as $product) {
-            if ($product['id'] == $product_id && $product['stock'] >= $quantity && $quantity > 0) {
-                $product_exists = true;
-                $selected_product = $product;
-                break;
-            }
-        }
+       $product_exists = false;
+$selected_product = null;
+foreach ($products as $product) {
+    if ($product['id'] == $product_id && $product['stock'] >= $quantity && $quantity > 0) {
+        $product_exists = true;
+        $selected_product = [
+            'quantity' => $quantity,
+            'name' => $product['name'],
+            'price' => $product['price'],
+            'part_id' => $product['id'] // Add this line
+        ];
+        break;
+    }
+}
+
 
         if ($product_exists) {
-            if (isset($_SESSION['cart'][$product_id])) {
-                $_SESSION['cart'][$product_id]['quantity'] += $quantity;
-            } else {
-                $_SESSION['cart'][$product_id] = [
-                    'quantity' => $quantity,
-                    'name' => $selected_product['name'],
-                    'price' => $selected_product['price']
-                ];
-            }
-            $success_msg = "Product added to cart successfully!";
-            $response = ['success' => true, 'message' => $success_msg, 'cart' => $_SESSION['cart']];
-            error_log("[" . date('Y-m-d H:i:s') . "] Cart updated: " . print_r($_SESSION['cart'], true));
-        } else {
-            $error_msg = "Invalid product or insufficient stock.";
-            $response = ['success' => false, 'message' => $error_msg];
-            error_log("[" . date('Y-m-d H:i:s') . "] Cart error: Invalid product or insufficient stock for product_id=$product_id");
-        }
+    if (!isset($_SESSION['cart'])) {
+        $_SESSION['cart'] = [];
+    }
+    
+    if (isset($_SESSION['cart'][$product_id])) {
+        $_SESSION['cart'][$product_id]['quantity'] += $quantity;
+    } else {
+        $_SESSION['cart'][$product_id] = [
+            'quantity' => $quantity,
+            'name' => $selected_product['name'],
+            'price' => $selected_product['price'],
+            'part_id' => $selected_product['part_id']
+        ];
+    }
+    
+    // Debug output
+    error_log("Cart after addition: " . print_r($_SESSION['cart'], true));
+    
+    $success_msg = "Part added to cart successfully!";
+    $response = [
+        'success' => true,
+        'message' => $success_msg,
+        'cart' => $_SESSION['cart']
+    ];
+}
 
         if ($isAjax) {
             header('Content-Type: application/json; charset=utf-8');
@@ -355,7 +372,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['checkout'])) {
 
         $customer_id = $_SESSION['user_id'];
         $total = 0;
-        foreach ($_SESSION['cart'] as $product_id => $item) {
+        foreach ($_SESSION['cart'] as $part_id => $item) {
             $total += $item['price'] * $item['quantity'];
         }
 
@@ -775,35 +792,42 @@ if (empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
                 <h3 class="text-lg font-semibold text-[#2c3e50] mb-4">Available Products</h3>
                 <div class="overflow-x-auto">
                     <table class="table w-full">
-                        <thead>
-                            <tr>
-                                <th class="px-4 py-2 rounded-tl-md">Product Name</th>
-                                <th class="px-4 py-2">Price (ZMK)</th>
-                                <th class="px-4 py-2">Stock</th>
-                                <th class="px-4 py-2 rounded-tr-md">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (empty($products)): ?>
-                                <tr><td colspan="4" class="text-center py-4 text-[#2c3e50]">No products available.</td></tr>
-                            <?php else: ?>
-                                <?php foreach ($products as $product): ?>
-                                    <tr>
-                                        <td class="px-4 py-2"><?php echo htmlspecialchars($product['name']); ?></td>
-                                        <td class="px-4 py-2"><?php echo number_format($product['price'], 2); ?></td>
-                                        <td class="px-4 py-2"><?php echo $product['stock']; ?></td>
-                                        <td class="px-4 py-2">
-                                            <form method="post" class="add-to-cart-form flex items-center gap-2" data-product-id="<?php echo $product['id']; ?>">
-                                                <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
-                                                <input type="number" name="quantity" min="1" max="<?php echo $product['stock']; ?>" value="1" class="px-2 py-1 rounded-md bg-[#f9f9f9] text-[#2c3e50] border border-[#ecf0f1] w-16 focus:outline-none focus:ring-2 focus:ring-[#3498db]">
-                                                <button type="submit" name="add_to_cart" class="px-4 py-2 bg-[#3498db] text-white rounded-md hover:bg-[#2980b9] transition">Add to Cart</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
+    <thead>
+        <tr>
+            <th class="px-4 py-2 rounded-tl-md">Part Name</th>
+            <th class="px-4 py-2">Category</th>
+            <th class="px-4 py-2">Description</th>
+            <th class="px-4 py-2">Price (ZMK)</th>
+            <th class="px-4 py-2">In Stock</th>
+            <th class="px-4 py-2 rounded-tr-md">Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php if (empty($products)): ?>
+            <tr><td colspan="6" class="text-center py-4 text-[#2c3e50]">No inventory items available.</td></tr>
+        <?php else: ?>
+            <?php foreach ($products as $product): ?>
+                <tr>
+                    <td class="px-4 py-2"><?php echo htmlspecialchars($product['name']); ?></td>
+                    <td class="px-4 py-2"><?php echo htmlspecialchars($product['category'] ?? 'N/A'); ?></td>
+                    <td class="px-4 py-2"><?php echo htmlspecialchars($product['description'] ?? 'No description'); ?></td>
+                    <td class="px-4 py-2"><?php echo number_format($product['price'], 2); ?></td>
+                    <td class="px-4 py-2"><?php echo $product['stock']; ?></td>
+                    <td class="px-4 py-2">
+                        <form method="post" class="add-to-cart-form flex items-center gap-2" data-product-id="<?php echo $product['id']; ?>">
+                            <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
+                            <input type="number" name="quantity" min="1" max="<?php echo $product['stock']; ?>" 
+                                   value="1" class="px-2 py-1 rounded-md bg-[#f9f9f9] text-[#2c3e50] border border-[#ecf0f1] w-16 focus:outline-none focus:ring-2 focus:ring-[#3498db]">
+                            <button type="submit" name="add_to_cart" class="px-4 py-2 bg-[#3498db] text-white rounded-md hover:bg-[#2980b9] transition">
+                                Add to Cart
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        <?php endif; ?>
+    </tbody>
+</table>
                 </div>
                 <!-- Cart -->
                 <h3 class="text-lg font-semibold text-[#2c3e50] mt-6 mb-4">Your Cart</h3>

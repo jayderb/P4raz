@@ -263,7 +263,7 @@ foreach ($orders as $order) {
             <div class="container mx-auto px-4">
                 <h2 class="sr-only">Customer Navigation</h2>
                 <nav>
-                    <a href="../RetailSytsem-Home.html">Home</a>
+                    <a href="dashboard.php">Home</a>
                     <a href="stock-form.php">Browse Cars</a>
                     <a href="orders.php">My Orders</a>
                 </nav>
