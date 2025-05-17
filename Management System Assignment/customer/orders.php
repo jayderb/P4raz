@@ -7,7 +7,7 @@ error_log("Attempting to access orders.php: " . $_SERVER['REQUEST_URI']);
 error_log("Session in orders.php: loggedin=" . (isset($_SESSION["loggedin"]) ? $_SESSION["loggedin"] : "unset") . 
           ", role=" . (isset($_SESSION["role"]) ? $_SESSION["role"] : "unset") . 
           ", user_id=" . (isset($_SESSION["user_id"]) ? $_SESSION["user_id"] : "unset") . 
-          ", id=" . (isset($_SESSION["id"]) ? $_SESSION["id"] : "unset"));
+          ", id=" . (isset($_SESSION["user_id"]) ? $_SESSION["user_id"] : "unset"));
 
 // Check if the user is logged in and has the customer role
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || !isset($_SESSION["role"]) || $_SESSION["role"] !== "customer" || !isset($_SESSION["user_id"])) {

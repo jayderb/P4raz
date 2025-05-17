@@ -3,7 +3,7 @@ session_start();
 header('Content-Type: application/json');
 
 // Check if the user is logged in and has the customer role
-if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || $_SESSION["role"] !== "customer" || !isset($_SESSION["id"])) {
+if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || $_SESSION["role"] !== "customer" || !isset($_SESSION["user_id"])) {
     echo json_encode([]);
     exit;
 }

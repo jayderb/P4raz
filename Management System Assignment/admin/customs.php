@@ -26,7 +26,7 @@ $sql = "SELECT s.id, s.employee_id, s.customer_id, u.first_name, u.last_name, cu
         LEFT JOIN users u ON s.employee_id = u.id 
         LEFT JOIN users cu ON s.customer_id = cu.id
         LEFT JOIN sales_items si ON s.id = si.sale_id
-        LEFT JOIN inventory i ON si.product_id = i.part_id
+        LEFT JOIN inventory i ON si.part_id = i.part_id
         GROUP BY s.id, s.employee_id, s.customer_id, u.first_name, u.last_name, cu.email, s.total, s.sale_date, s.status
         ORDER BY s.sale_date DESC";
 $stmt = $conn->prepare($sql);
@@ -63,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['mark_delivered'])) {
                 LEFT JOIN users u ON s.employee_id = u.id
                 LEFT JOIN users cu ON s.customer_id = cu.id
                 LEFT JOIN sales_items si ON s.id = si.sale_id
-                LEFT JOIN inventory i ON si.product_id = i.part_id
+                LEFT JOIN inventory i ON si.part_id = i.part_id
                 GROUP BY s.id, s.employee_id, s.customer_id, u.first_name, u.last_name, cu.email, s.total, s.sale_date, s.status 
                 ORDER BY s.sale_date DESC";
         $stmt = $conn->prepare($sql);

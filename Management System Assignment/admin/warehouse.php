@@ -551,7 +551,7 @@ unset($_SESSION['success'], $_SESSION['error']);
     <main class="flex-1">
         <section class="dashboard-section">
             <div class="container">
-                <h2>Welcome, Admin <?php echo htmlspecialchars($_SESSION['email']); ?>!</h2>
+                <h2>Welcome, Mss. <?php echo htmlspecialchars($_SESSION['last_name']); ?>!</h2>
 
                 <!-- Display Success/Error Messages -->
                 <?php if ($success): ?>

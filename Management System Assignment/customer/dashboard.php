@@ -106,13 +106,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile'])) {
     $last_name = trim($_POST['last_name']);
     $email = trim($_POST['email']);
     $phone = trim($_POST['phone']);
-    $customer_id = $_SESSION['user_id'];
+    $customer_id = $_SESSION['id'];
     $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
 
     // Validate input
     if (empty($first_name) || empty($last_name)) {
         $profile_error_msg = "First name and last name are required.";
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+} elseif (!empty($email) && !preg_match("/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/", $email)) {
         $profile_error_msg = "Invalid email address.";
     } elseif (empty($phone) || !preg_match("/^[0-9]{10,15}$/", $phone)) {
         $profile_error_msg = "Invalid phone number. Must be 10-15 digits.";
@@ -142,7 +142,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile'])) {
                     $_SESSION['phone'] = $phone;
                     $profile_success_msg = "Profile updated successfully!";
                     $response = ['success' => true, 'message' => $profile_success_msg, 'first_name' => $first_name];
-                    error_log("[" . date('Y-m-d H:i:s') . "] Profile updated for user_id=$customer_id");
+                    error_log("[" . date('Y-m-d H:i:s') . "] Profile updated for id=$customer_id");
                 } else {
                     $profile_error_msg = "No changes made to profile.";
                     $response = ['success' => false, 'message' => $profile_error_msg];
@@ -172,7 +172,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_settings'])) {
     $new_password = $_POST['new_password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
     $receive_notifications = isset($_POST['receive_notifications']) ? 1 : 0;
-    $customer_id = $_SESSION['user_id'];
+    $customer_id = $_SESSION['id'];
     $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
 
     try {
@@ -216,7 +216,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_settings'])) {
         if ($stmt->rowCount() > 0) {
             $settings_success_msg = "Settings updated successfully!";
             $response = ['success' => true, 'message' => $settings_success_msg];
-            error_log("[" . date('Y-m-d H:i:s') . "] Settings updated for user_id=$customer_id");
+            error_log("[" . date('Y-m-d H:i:s') . "] Settings updated for id=$customer_id");
         } else {
             $settings_error_msg = "No changes made to settings.";
             $response = ['success' => false, 'message' => $settings_error_msg];
@@ -240,8 +240,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_settings'])) {
 
 // Fetch products from the database
 try {
-    $sql = "SELECT part_id as id, part_name as name, unit_price as price, quantity as stock, 
-                   description, category 
+    $sql = "SELECT part_id as id, part_name as name, unit_price as price, quantity, 
+                   description, category, warehouse_id, reorder_level, supplier_id, last_updated 
             FROM inventory 
             WHERE quantity > 0";
     $stmt = $conn->prepare($sql);
@@ -249,14 +249,14 @@ try {
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     error_log("[" . date('Y-m-d H:i:s') . "] Fetched " . count($products) . " inventory items");
 } catch (PDOException $e) {
-    $error_msg = "Error fetching inventory: " . $e->getMessage();
     error_log("[" . date('Y-m-d H:i:s') . "] Fetch inventory error: " . $e->getMessage());
     if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
         header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['success' => false, 'message' => $error_msg]);
+        echo json_encode(['success' => false, 'message' => 'Error fetching inventory: ' . $e->getMessage()]);
         ob_end_flush();
         exit;
     }
+    $error_msg = "Error fetching inventory: " . $e->getMessage();
 }
 
 // Process adding items to the cart
@@ -265,52 +265,65 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_to_cart'])) {
     $quantity = (int)$_POST['quantity'];
     $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
 
-    error_log("[" . date('Y-m-d H:i:s') . "] Adding to cart: user_id={$_SESSION['user_id']}, product_id=$product_id, quantity=$quantity, isAjax=$isAjax");
+    error_log("[" . date('Y-m-d H:i:s') . "] Adding to cart: id={$_SESSION['id']}, product_id=$product_id, quantity=$quantity, isAjax=$isAjax");
 
     try {
+        // Validate inputs
+        if ($quantity <= 0) {
+            throw new Exception("Quantity must be greater than zero.");
+        }
+        if (!$product_id) {
+            throw new Exception("Invalid product ID.");
+        }
+
         // Validate product ID and quantity
-       $product_exists = false;
-$selected_product = null;
-foreach ($products as $product) {
-    if ($product['id'] == $product_id && $product['stock'] >= $quantity && $quantity > 0) {
-        $product_exists = true;
-        $selected_product = [
-            'quantity' => $quantity,
-            'name' => $product['name'],
-            'price' => $product['price'],
-            'part_id' => $product['id'] // Add this line
-        ];
-        break;
-    }
-}
+        $product_exists = false;
+        $selected_product = null;
+        foreach ($products as $product) {
+            if ($product['id'] == $product_id) {
+                if ($product['quantity'] < $quantity) {
+                    throw new Exception("Insufficient stock. Available: {$product['quantity']}.");
+                }
+                $product_exists = true;
+                $selected_product = [
+                    'quantity' => $quantity,
+                    'name' => $product['name'],
+                    'price' => $product['price'],
+                    'part_id' => $product['id']
+                ];
+                break;
+            }
+        }
 
+        if (!$product_exists) {
+            throw new Exception("Product not found.");
+        }
 
-        if ($product_exists) {
-    if (!isset($_SESSION['cart'])) {
-        $_SESSION['cart'] = [];
-    }
-    
-    if (isset($_SESSION['cart'][$product_id])) {
-        $_SESSION['cart'][$product_id]['quantity'] += $quantity;
-    } else {
-        $_SESSION['cart'][$product_id] = [
-            'quantity' => $quantity,
-            'name' => $selected_product['name'],
-            'price' => $selected_product['price'],
-            'part_id' => $selected_product['part_id']
+        // Add to cart
+        if (!isset($_SESSION['cart'])) {
+            $_SESSION['cart'] = [];
+        }
+        
+        if (isset($_SESSION['cart'][$product_id])) {
+            $_SESSION['cart'][$product_id]['quantity'] += $quantity;
+        } else {
+            $_SESSION['cart'][$product_id] = [
+                'quantity' => $quantity,
+                'name' => $selected_product['name'],
+                'price' => $selected_product['price'],
+                'part_id' => $selected_product['part_id']
+            ];
+        }
+        
+        // Debug output
+        error_log("[" . date('Y-m-d H:i:s') . "] Cart after addition: " . print_r($_SESSION['cart'], true));
+        
+        $success_msg = "Part added to cart successfully!";
+        $response = [
+            'success' => true,
+            'message' => $success_msg,
+            'cart' => $_SESSION['cart']
         ];
-    }
-    
-    // Debug output
-    error_log("Cart after addition: " . print_r($_SESSION['cart'], true));
-    
-    $success_msg = "Part added to cart successfully!";
-    $response = [
-        'success' => true,
-        'message' => $success_msg,
-        'cart' => $_SESSION['cart']
-    ];
-}
 
         if ($isAjax) {
             header('Content-Type: application/json; charset=utf-8');
@@ -322,12 +335,12 @@ foreach ($products as $product) {
             ob_end_flush();
             exit;
         } else {
-            header("Location: dashboard.php?" . ($product_exists ? "success=" . urlencode($success_msg) : "error=" . urlencode($error_msg)));
+            header("Location: dashboard.php?success=" . urlencode($success_msg));
             ob_end_flush();
             exit;
         }
     } catch (Exception $e) {
-        $error_msg = "Error adding to cart: " . $e->getMessage();
+        $error_msg = $e->getMessage();
         $response = ['success' => false, 'message' => $error_msg];
         error_log("[" . date('Y-m-d H:i:s') . "] Cart error: " . $e->getMessage());
         if ($isAjax) {
@@ -351,7 +364,7 @@ foreach ($products as $product) {
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['checkout'])) {
     $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
 
-    error_log("[" . date('Y-m-d H:i:s') . "] Starting checkout: user_id={$_SESSION['user_id']}, isAjax=$isAjax");
+    error_log("[" . date('Y-m-d H:i:s') . "] Starting checkout: id={$_SESSION['id']}, isAjax=$isAjax");
 
     try {
         if (empty($_SESSION['cart'])) {
@@ -366,6 +379,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['checkout'])) {
         }
         if (empty($customer_phone) || !preg_match("/^[0-9]{10,15}$/", $customer_phone)) {
             throw new Exception("Invalid phone number. Must be 10-15 digits.");
+        }
+
+        // Validate stock before checkout
+        $sql = "SELECT part_id, quantity FROM inventory WHERE part_id IN (" . implode(',', array_keys($_SESSION['cart'])) . ")";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        $inventory = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+        foreach ($_SESSION['cart'] as $product_id => $item) {
+            if (!isset($inventory[$product_id])) {
+                throw new Exception("Product ID $product_id is no longer available.");
+            }
+            if ($inventory[$product_id] < $item['quantity']) {
+                throw new Exception("Insufficient stock for {$item['name']}. Available: {$inventory[$product_id]}.");
+            }
         }
 
         $conn->beginTransaction();
@@ -387,7 +415,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['checkout'])) {
 
         // Insert sale items
         foreach ($_SESSION['cart'] as $product_id => $item) {
-            $sql = "INSERT INTO sales_items (sale_id, product_id, quantity, price) 
+            $sql = "INSERT INTO sales_items (sale_id, part_id, quantity, price) 
                     VALUES (:sale_id, :product_id, :quantity, :price)";
             $stmt = $conn->prepare($sql);
             $stmt->bindParam(":sale_id", $sale_id, PDO::PARAM_INT);
@@ -398,7 +426,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['checkout'])) {
             error_log("[" . date('Y-m-d H:i:s') . "] Sales item added: sale_id=$sale_id, product_id=$product_id");
 
             // Update stock
-            $sql = "UPDATE products SET stock = stock - :quantity WHERE id = :product_id";
+            $sql = "UPDATE inventory SET quantity = quantity - :quantity WHERE part_id = :product_id";
             $stmt = $conn->prepare($sql);
             $stmt->bindParam(":quantity", $item['quantity'], PDO::PARAM_INT);
             $stmt->bindParam(":product_id", $product_id, PDO::PARAM_INT);
@@ -461,6 +489,7 @@ try {
     // Set session email and phone if not already set
     $_SESSION['email'] = $_SESSION['email'] ?? $profile['email'];
     $_SESSION['phone'] = $_SESSION['phone'] ?? $profile['phone'];
+    $_SESSION['first_name'] = $_SESSION['first_name'] ?? $profile['first_name'];
 } catch (Exception $e) {
     error_log("[" . date('Y-m-d H:i:s') . "] Profile error: " . $e->getMessage());
     $error_msg = "Error fetching profile: " . $e->getMessage();
@@ -792,42 +821,50 @@ if (empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
                 <h3 class="text-lg font-semibold text-[#2c3e50] mb-4">Available Products</h3>
                 <div class="overflow-x-auto">
                     <table class="table w-full">
-    <thead>
-        <tr>
-            <th class="px-4 py-2 rounded-tl-md">Part Name</th>
-            <th class="px-4 py-2">Category</th>
-            <th class="px-4 py-2">Description</th>
-            <th class="px-4 py-2">Price (ZMK)</th>
-            <th class="px-4 py-2">In Stock</th>
-            <th class="px-4 py-2 rounded-tr-md">Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php if (empty($products)): ?>
-            <tr><td colspan="6" class="text-center py-4 text-[#2c3e50]">No inventory items available.</td></tr>
-        <?php else: ?>
-            <?php foreach ($products as $product): ?>
-                <tr>
-                    <td class="px-4 py-2"><?php echo htmlspecialchars($product['name']); ?></td>
-                    <td class="px-4 py-2"><?php echo htmlspecialchars($product['category'] ?? 'N/A'); ?></td>
-                    <td class="px-4 py-2"><?php echo htmlspecialchars($product['description'] ?? 'No description'); ?></td>
-                    <td class="px-4 py-2"><?php echo number_format($product['price'], 2); ?></td>
-                    <td class="px-4 py-2"><?php echo $product['stock']; ?></td>
-                    <td class="px-4 py-2">
-                        <form method="post" class="add-to-cart-form flex items-center gap-2" data-product-id="<?php echo $product['id']; ?>">
-                            <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
-                            <input type="number" name="quantity" min="1" max="<?php echo $product['stock']; ?>" 
-                                   value="1" class="px-2 py-1 rounded-md bg-[#f9f9f9] text-[#2c3e50] border border-[#ecf0f1] w-16 focus:outline-none focus:ring-2 focus:ring-[#3498db]">
-                            <button type="submit" name="add_to_cart" class="px-4 py-2 bg-[#3498db] text-white rounded-md hover:bg-[#2980b9] transition">
-                                Add to Cart
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        <?php endif; ?>
-    </tbody>
-</table>
+                        <thead>
+                            <tr>
+                                <th class="px-4 py-2 rounded-tl-md">Part Name</th>
+                                <th class="px-4 py-2">Category</th>
+                                <th class="px-4 py-2">Description</th>
+                                <th class="px-4 py-2">Price (ZMK)</th>
+                                <th class="px-4 py-2">Quantity</th>
+                                <th class="px-4 py-2">Warehouse ID</th>
+                                <th class="px-4 py-2">Reorder Level</th>
+                                <th class="px-4 py-2">Supplier ID</th>
+                                <th class="px-4 py-2">Last Updated</th>
+                                <th class="px-4 py-2 rounded-tr-md">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($products)): ?>
+                                <tr><td colspan="10" class="text-center py-4 text-[#2c3e50]">No inventory items available.</td></tr>
+                            <?php else: ?>
+                                <?php foreach ($products as $product): ?>
+                                    <tr>
+                                        <td class="px-4 py-2"><?php echo htmlspecialchars($product['name']); ?></td>
+                                        <td class="px-4 py-2"><?php echo htmlspecialchars($product['category'] ?? 'N/A'); ?></td>
+                                        <td class="px-4 py-2"><?php echo htmlspecialchars($product['description'] ?? 'No description'); ?></td>
+                                        <td class="px-4 py-2"><?php echo number_format($product['price'], 2); ?></td>
+                                        <td class="px-4 py-2"><?php echo $product['quantity']; ?></td>
+                                        <td class="px-4 py-2"><?php echo $product['warehouse_id']; ?></td>
+                                        <td class="px-4 py-2"><?php echo $product['reorder_level']; ?></td>
+                                        <td class="px-4 py-2"><?php echo htmlspecialchars($product['supplier_id'] ?? 'N/A'); ?></td>
+                                        <td class="px-4 py-2"><?php echo date('M d, Y H:i', strtotime($product['last_updated'])); ?></td>
+                                        <td class="px-4 py-2">
+                                            <form method="post" class="add-to-cart-form flex items-center gap-2" data-product-id="<?php echo $product['id']; ?>">
+                                                <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
+                                                <input type="number" name="quantity" min="1" max="<?php echo $product['quantity']; ?>" 
+                                                       value="1" class="px-2 py-1 rounded-md bg-[#f9f9f9] text-[#2c3e50] border border-[#ecf0f1] w-16 focus:outline-none focus:ring-2 focus:ring-[#3498db]">
+                                                <button type="submit" name="add_to_cart" class="px-4 py-2 bg-[#3498db] text-white rounded-md hover:bg-[#2980b9] transition">
+                                                    Add to Cart
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
                 <!-- Cart -->
                 <h3 class="text-lg font-semibold text-[#2c3e50] mt-6 mb-4">Your Cart</h3>
@@ -904,7 +941,6 @@ if (empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
                 </form>
             </div>
         </section>
-        </div>
     </main>
     <!-- Footer -->
     <footer class="bg-[#2c3e50] text-[#ecf0f1] py-10">
@@ -981,283 +1017,6 @@ if (empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
             }
         }
         updateCopyright();
-        // Handle Add to Cart Form Submission
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.add-to-cart-form').forEach(form => {
-                form.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const productId = form.querySelector('input[name="product_id"]').value;
-                    const quantity = form.querySelector('input[name="quantity"]').value;
-                    if (!confirm(`Are you sure you want to add ${quantity} product(s) (ID: ${productId}) to your cart?`)) {
-                        return;
-                    }
-                    const formData = new FormData(form);
-                    console.log(`Submitting add to cart for product_id: ${productId}, quantity: ${quantity}`);
-                    try {
-                        const response = await fetch(window.location.href, {
-                            method: 'POST',
-                            body: formData,
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        });
-                        if (!response.ok) {
-                            const text = await response.text();
-                            console.error('Non-JSON response:', text.substring(0, 500));
-                            alert('Error: Unable to add to cart. Check console for details.');
-                            return;
-                        }
-                        const result = await response.json();
-                        console.log('Add to cart response:', result);
-                        const messageContainer = document.getElementById('message-container');
-                        messageContainer.innerHTML = `<div class="message ${result.success ? 'success' : 'error'}">${result.message}</div>`;
-                        if (result.success) {
-                            const button = form.querySelector('button');
-                            button.textContent = 'Added';
-                            button.classList.remove('bg-[#3498db]', 'hover:bg-[#2980b9]');
-                            button.classList.add('bg-[#7f8c8d]', 'cursor-not-allowed');
-                            button.disabled = true;
-                            // Update cart UI
-                            const cartContainer = document.getElementById('cart-container');
-                            if (result.cart && Object.keys(result.cart).length > 0) {
-                                let cartHtml = `
-                                    <div class="overflow-x-auto">
-                                        <table class="table w-full mb-4">
-                                            <thead>
-                                                <tr>
-                                                    <th class="px-4 py-2 rounded-tl-md">Product Name</th>
-                                                    <th class="px-4 py-2">Price (ZMK)</th>
-                                                    <th class="px-4 py-2">Quantity</th>
-                                                    <th class="px-4 py-2 rounded-tr-md">Subtotal (ZMK)</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                `;
-                                let cartTotal = 0;
-                                for (const [productId, item] of Object.entries(result.cart)) {
-                                    const subtotal = item.price * item.quantity;
-                                    cartTotal += subtotal;
-                                    cartHtml += `
-                                        <tr>
-                                            <td class="px-4 py-2">${item.name}</td>
-                                            <td class="px-4 py-2">${parseFloat(item.price).toFixed(2)}</td>
-                                            <td class="px-4 py-2">${item.quantity}</td>
-                                            <td class="px-4 py-2">${subtotal.toFixed(2)}</td>
-                                        </tr>
-                                    `;
-                                }
-                                cartHtml += `
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <p class="text-[#2c3e50] font-bold mb-4">Total: ZMK${cartTotal.toFixed(2)}</p>
-                                    <form method="post" id="checkout-form">
-                                        <div class="mb-4">
-                                            <label for="customer_email" class="block text-[#2c3e50] mb-1">Confirm Email:</label>
-                                            <input type="email" name="customer_email" id="customer_email" value="<?php echo htmlspecialchars($_SESSION['email'] ?? ''); ?>" required class="w-full px-3 py-2 rounded-md bg-[#f9f9f9] text-[#2c3e50] border border-[#ecf0f1] focus:outline-none focus:ring-2 focus:ring-[#3498db]">
-                                            <label for="customer_phone" class="block text-[#2c3e50] mb-1 mt-2">Confirm Phone Number:</label>
-                                            <input type="text" name="customer_phone" id="customer_phone" value="<?php echo htmlspecialchars($_SESSION['phone'] ?? ''); ?>" required pattern="[0-9]{10,15}" title="Please enter a phone number with 10 to 15 digits" class="w-full px-3 py-2 rounded-md bg-[#f9f9f9] text-[#2c3e50] border border-[#ecf0f1] focus:outline-none focus:ring-2 focus:ring-[#3498db]">
-                                        </div>
-                                        <button type="submit" name="checkout" class="px-4 py-2 bg-[#2ecc71] text-white rounded-md hover:bg-[#27ae60] transition">Checkout</button>
-                                    </form>
-                                `;
-                                cartContainer.innerHTML = cartHtml;
-                            } else {
-                                cartContainer.innerHTML = '<p class="text-[#2c3e50] text-center">Your cart is empty.</p>';
-                            }
-                            // Reattach checkout form listener
-                            attachCheckoutListener();
-                        } else {
-                            alert(result.message);
-                        }
-                    } catch (error) {
-                        console.error('Fetch error:', error);
-                        alert('Error: Unable to add to cart. Please try again or contact support.');
-                    }
-                });
-            });
-            // Handle Checkout Form Submission
-            function attachCheckoutListener() {
-                const checkoutForm = document.getElementById('checkout-form');
-                if (checkoutForm) {
-                    checkoutForm.addEventListener('submit', async (e) => {
-                        e.preventDefault();
-                        if (!confirm('Are you sure you want to complete this purchase?')) {
-                            return;
-                        }
-                        const formData = new FormData(checkoutForm);
-                        console.log('Submitting checkout');
-                        try {
-                            const response = await fetch(window.location.href, {
-                                method: 'POST',
-                                body: formData,
-                                headers: {
-                                    'X-Requested-With': 'XMLHttpRequest'
-                                }
-                            });
-                            if (!response.ok) {
-                                const text = await response.text();
-                                console.error('Non-JSON response:', text.substring(0, 500));
-                                alert('Error: Unable to process checkout. Check console for details.');
-                                return;
-                            }
-                            const result = await response.json();
-                            console.log('Checkout response:', result);
-                            const messageContainer = document.getElementById('message-container');
-                            messageContainer.innerHTML = `<div class="message ${result.success ? 'success' : 'error'}">${result.message}</div>`;
-                            if (result.success) {
-                                const cartContainer = document.getElementById('cart-container');
-                                cartContainer.innerHTML = '<p class="text-[#2c3e50] text-center">Your cart is empty.</p>';
-                                alert(result.message);
-                                location.reload(); // Refresh to update metrics
-                            } else {
-                                alert(result.message);
-                            }
-                        } catch (error) {
-                            console.error('Fetch error:', error);
-                            alert('Error: Unable to process checkout. Please try again or contact support.');
-                        }
-                    });
-                }
-            }
-            attachCheckoutListener();
-            // Handle Review Form Submission
-            const reviewForm = document.getElementById('review-form');
-            if (reviewForm) {
-                reviewForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const rating = reviewForm.querySelector('input[name="rating"]:checked')?.value;
-                    const comment = reviewForm.querySelector('textarea[name="comment"]').value;
-                    if (!rating || !comment) {
-                        alert('Please select a rating and provide a comment.');
-                        return;
-                    }
-                    const formData = new FormData(reviewForm);
-                    console.log('Submitting review');
-                    try {
-                        const response = await fetch(window.location.href, {
-                            method: 'POST',
-                            body: formData,
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        });
-                        if (!response.ok) {
-                            const text = await response.text();
-                            console.error('Non-JSON response:', text.substring(0, 500));
-                            alert('Error: Unable to submit review. Check console for details.');
-                            return;
-                        }
-                        const result = await response.json();
-                        console.log('Review response:', result);
-                        const reviewMessageContainer = document.getElementById('review-message-container');
-                        reviewMessageContainer.innerHTML = `<div class="message ${result.success ? 'success' : 'error'}">${result.message}</div>`;
-                        if (result.success) {
-                            reviewForm.reset();
-                            alert(result.message);
-                        } else {
-                            alert(result.message);
-                        }
-                    } catch (error) {
-                        console.error('Fetch error:', error);
-                        alert('Error: Unable to submit review. Please try again or contact support.');
-                    }
-                });
-            }
-            // Handle Profile Form Submission
-            const profileForm = document.getElementById('profile-form');
-            if (profileForm) {
-                profileForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    if (!confirm('Are you sure you want to update your profile?')) {
-                        return;
-                    }
-                    const formData = new FormData(profileForm);
-                    console.log('Submitting profile update');
-                    try {
-                        const response = await fetch(window.location.href, {
-                            method: 'POST',
-                            body: formData,
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        });
-                        if (!response.ok) {
-                            const text = await response.text();
-                            console.error('Non-JSON response:', text.substring(0, 500));
-                            alert('Error: Unable to update profile. Check console for details.');
-                            return;
-                        }
-                        const result = await response.json();
-                        console.log('Profile update response:', result);
-                        const profileMessageContainer = document.getElementById('profile-message-container');
-                        profileMessageContainer.innerHTML = `<div class="message ${result.success ? 'success' : 'error'}">${result.message}</div>`;
-                        if (result.success) {
-                            // Update welcome message
-                            const welcomeName = document.getElementById('welcome-name');
-                            welcomeName.textContent = `Hi, ${result.first_name}!`;
-                            alert(result.message);
-                        } else {
-                            alert(result.message);
-                        }
-                    } catch (error) {
-                        console.error('Fetch error:', error);
-                        alert('Error: Unable to update profile. Please try again or contact support.');
-                    }
-                });
-            }
-            // Handle Settings Form Submission
-            const settingsForm = document.getElementById('settings-form');
-            if (settingsForm) {
-                settingsForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    if (!confirm('Are you sure you want to update your settings?')) {
-                        return;
-                    }
-                    const formData = new FormData(settingsForm);
-                    console.log('Submitting settings update');
-                    try {
-                        const response = await fetch(window.location.href, {
-                            method: 'POST',
-                            body: formData,
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        });
-                        if (!response.ok) {
-                            const text = await response.text();
-                            console.error('Non-JSON response:', text.substring(0, 500));
-                            alert('Error: Unable to update settings. Check console for details.');
-                            return;
-                        }
-                        const result = await response.json();
-                        console.log('Settings update response:', result);
-                        const settingsMessageContainer = document.getElementById('settings-message-container');
-                        settingsMessageContainer.innerHTML = `<div class="message ${result.success ? 'success' : 'error'}">${result.message}</div>`;
-                        if (result.success) {
-                            settingsForm.reset();
-                            alert(result.message);
-                        } else {
-                            alert(result.message);
-                        }
-                    } catch (error) {
-                        console.error('Fetch error:', error);
-                        alert('Error: Unable to update settings. Please try again or contact support.');
-                    }
-                });
-            }
-            // Tab Switching
-            const tabs = document.querySelectorAll('.tab');
-            const tabContents = document.querySelectorAll('.tab-content');
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    tabs.forEach(t => t.classList.remove('active'));
-                    tabContents.forEach(content => content.classList.add('hidden'));
-                    tab.classList.add('active');
-                    document.getElementById(`${tab.dataset.tab}-tab`).classList.remove('hidden');
-                });
-            });
-        });
     </script>
 <?php
 // Close connection
