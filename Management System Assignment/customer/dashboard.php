@@ -828,10 +828,6 @@ if (empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
                                 <th class="px-4 py-2">Description</th>
                                 <th class="px-4 py-2">Price (ZMK)</th>
                                 <th class="px-4 py-2">Quantity</th>
-                                <th class="px-4 py-2">Warehouse ID</th>
-                                <th class="px-4 py-2">Reorder Level</th>
-                                <th class="px-4 py-2">Supplier ID</th>
-                                <th class="px-4 py-2">Last Updated</th>
                                 <th class="px-4 py-2 rounded-tr-md">Action</th>
                             </tr>
                         </thead>
@@ -846,10 +842,6 @@ if (empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
                                         <td class="px-4 py-2"><?php echo htmlspecialchars($product['description'] ?? 'No description'); ?></td>
                                         <td class="px-4 py-2"><?php echo number_format($product['price'], 2); ?></td>
                                         <td class="px-4 py-2"><?php echo $product['quantity']; ?></td>
-                                        <td class="px-4 py-2"><?php echo $product['warehouse_id']; ?></td>
-                                        <td class="px-4 py-2"><?php echo $product['reorder_level']; ?></td>
-                                        <td class="px-4 py-2"><?php echo htmlspecialchars($product['supplier_id'] ?? 'N/A'); ?></td>
-                                        <td class="px-4 py-2"><?php echo date('M d, Y H:i', strtotime($product['last_updated'])); ?></td>
                                         <td class="px-4 py-2">
                                             <form method="post" class="add-to-cart-form flex items-center gap-2" data-product-id="<?php echo $product['id']; ?>">
                                                 <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
