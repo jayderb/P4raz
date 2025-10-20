@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About | ZedAuto</title>
+  <link rel="icon" type="image/ico" href="favicon.ico">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+       body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f9f9f9;
+      color: #1a1a1a;
+    }
+
+    /* New: make container relative and give it a height */
+    .video-container {
+      position: relative;
+      width: 100%;
+      height: 60vh; /* adjust (50vh/70vh) to taste */
+      overflow: hidden;
+    }
+
+    /* Video sits behind content but inside the container */
+    #video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+    }
+
+    /* Hero sits on top of the video */
+    .hero {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      text-align: center;
+      color: #fff; /* ensure text is visible */
+      padding: 1rem 2rem;
+      pointer-events: none;
+    }
+
+    .hero h1 {
+      font-size: 2.25rem;
+      text-shadow: 0 6px 18px rgba(0,0,0,0.6); /* improve contrast */
+      margin: 0;
+    }
+
+    .highlight {
+      background-color: #fef3c7;
+      border-left: 5px solid #facc15;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+    }
+    @keyframes fadeIn {
+        0% { opacity: 0; transform: translateY(20px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-fade-in {
+    animation: fadeIn 1.5s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+
+  <!-- Header -->
+  <header class="navbar bg-gray-900 text-white">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <a href="RetailSytsem-Home.html" class="text-2xl font-bold text-yellow-400">ZedAuto</a>
+      <nav class="hidden md:flex space-x-6">
+        <a href="RetailSytsem-Home.html" class="hover:text-yellow-400">HOME</a>
+        <a href="maintenance.php" class="hover:text-yellow-400">MAINTENANCE</a>
+        <a href="auto-repair.php" class="hover:text-yellow-400">AUTO REPAIR</a>
+        <a href="#" class="hover:text-yellow-400">PRICE LIST</a>
+        <a href="#" class="hover:text-yellow-400">REVIEWS</a>
+        <a href="Retail System-About.html" class="text-yellow-400 font-semibold">ABOUT</a>
+        <a href="Retail System-Contact.html" class="hover:text-yellow-400">CONTACT</a>
+      </nav>
+    </div>
+    <div class="bg-gray-800 py-2">
+      <div class="container mx-auto px-4 flex justify-between text-sm">
+        <div class="flex space-x-4">
+          <div><i class="fas fa-map-marker-alt"></i> Lusaka, Zambia</div>
+          <div><i class="fas fa-phone"></i> +260 987654321</div>
+          <div><i class="fas fa-envelope"></i> <a href="mailto:info@zedauto.com" class="hover:text-yellow-400">info@zedauto.com</a></div>
+        </div>
+        <div class="flex space-x-4">
+          <a href="sell.html" class="hover:text-yellow-400">Sell Car</a>
+          <a href="RetailSystem-LocalGarage-Login.php" class="hover:text-yellow-400">Buy Car</a>
+          <a href="RetailSystem-Signup.php" class="hover:text-yellow-400">Order Parts</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <div class="video-container">
+        <video autoplay muted loop id="video">
+            <source src="./Static/Videos/2025 Toyota Land Cruiser - Toyota.com.mp4">
+            Your browser does not support HTML5 video.
+        </video>
+        <div class="hero">
+            <h1 class="text-4xl md:text-6xl font-bold mb-4">About ZedAuto</h1>
+    </div>
+    </div>
+
+  <!-- About Section -->
+  <section class="container mx-auto px-4 py-16">
+    <div class="text-center mb-10">
+      <h2 class="text-3xl font-bold text-gray-800 mb-2">Who We Are</h2>
+      <p class="text-gray-600 max-w-2xl mx-auto">ZedAuto is Zambia’s leading digital automotive platform that connects car owners, garages, and dealers through innovation, transparency, and technology.</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-12 items-center">
+      <img src="./Static/images/teamwork.jpg" alt="ZedAuto Team" class="rounded-lg shadow-md">
+      <div>
+        <div class="highlight mb-6">
+          <p class="text-gray-800 font-medium italic">“We’re not just changing how people service their cars — we’re redefining how Zambia drives.”</p>
+        </div>
+        <p class="text-gray-700 mb-4">
+          Founded with the vision to revolutionize Zambia’s automotive sector, ZedAuto brings convenience to your fingertips — whether you’re booking a service, finding a trusted mechanic, or exploring cars for sale.
+        </p>
+        <p class="text-gray-700 mb-4">
+          Our platform is designed with the user in mind — combining sleek technology, reliable data, and excellent service to keep you moving.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Mission & Vision -->
+  <section class="bg-gray-900 text-white py-16">
+    <div class="container mx-auto px-4 text-center">
+      <h2 class="text-3xl font-bold text-yellow-400 mb-8">Our Mission & Vision</h2>
+      <div class="grid md:grid-cols-2 gap-10 text-gray-300">
+        <div>
+          <h3 class="text-xl font-semibold mb-2 text-yellow-400">Mission</h3>
+          <p>To simplify automotive experiences through digital innovation, trust, and transparency — empowering customers and businesses alike.</p>
+        </div>
+        <div>
+          <h3 class="text-xl font-semibold mb-2 text-yellow-400">Vision</h3>
+          <p>To become Zambia’s go-to automotive ecosystem, merging technology with passion to keep every driver confidently on the road.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Values -->
+  <section class="container mx-auto px-4 py-16">
+    <h2 class="text-3xl font-bold text-center text-gray-800 mb-10">Our Core Values</h2>
+    <div class="grid md:grid-cols-4 gap-8 text-center">
+      <div class="p-6 bg-white rounded-lg shadow hover:shadow-lg transition">
+        <i class="fas fa-handshake text-yellow-400 text-4xl mb-4"></i>
+        <h4 class="font-semibold text-gray-800 mb-2">Integrity</h4>
+        <p class="text-gray-600 text-sm">We value honesty and transparency in every interaction.</p>
+      </div>
+      <div class="p-6 bg-white rounded-lg shadow hover:shadow-lg transition">
+        <i class="fas fa-users text-yellow-400 text-4xl mb-4"></i>
+        <h4 class="font-semibold text-gray-800 mb-2">Customer Focus</h4>
+        <p class="text-gray-600 text-sm">Our customers drive our mission and inspire our innovation.</p>
+      </div>
+      <div class="p-6 bg-white rounded-lg shadow hover:shadow-lg transition">
+        <i class="fas fa-lightbulb text-yellow-400 text-4xl mb-4"></i>
+        <h4 class="font-semibold text-gray-800 mb-2">Innovation</h4>
+        <p class="text-gray-600 text-sm">We use technology to create smarter, easier automotive experiences.</p>
+      </div>
+      <div class="p-6 bg-white rounded-lg shadow hover:shadow-lg transition">
+        <i class="fas fa-globe-africa text-yellow-400 text-4xl mb-4"></i>
+        <h4 class="font-semibold text-gray-800 mb-2">Community</h4>
+        <p class="text-gray-600 text-sm">We aim to uplift Zambia’s automotive industry through collaboration.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-white py-8">
+    <div class="container mx-auto px-4">
+      <div class="grid md:grid-cols-3 gap-8">
+        <div>
+          <h3 class="text-xl font-bold mb-4 text-yellow-400">ZedAuto</h3>
+          <p>Empowering Zambia’s automotive ecosystem with innovation and reliability.</p>
+        </div>
+        <div>
+          <h3 class="text-xl font-bold mb-4 text-yellow-400">Quick Links</h3>
+          <ul class="space-y-2">
+            <li><a href="Retail Sytsem-Home.html" class="hover:text-yellow-400">Home</a></li>
+            <li><a href="Retail System-About.html" class="hover:text-yellow-400">About Us</a></li>
+            <li><a href="Retail System-Contact.html" class="hover:text-yellow-400">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-xl font-bold mb-4 text-yellow-400">Connect</h3>
+          <div class="flex space-x-4">
+            <a href="#" class="hover:text-yellow-400"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="hover:text-yellow-400"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="hover:text-yellow-400"><i class="fab fa-instagram"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="text-center mt-6 text-gray-400 text-sm">© 2025 ZedAuto. All rights reserved.</div>
+    </div>
+  </footer>
+
+</body>
+</html>
